@@ -66,9 +66,9 @@ export const NOMES_PRAGA: Record<TipoPraga, string> = {
  */
 export const IMAGENS_PRAGA: Record<TipoPraga, string> = {
   aranhico:
-    'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Solanum_lycopersicum_leaves_with_spider_mite_or_thrips_damage_in_Dnipro_by_baby-bear.org.jpg/500px-Solanum_lycopersicum_leaves_with_spider_mite_or_thrips_damage_in_Dnipro_by_baby-bear.org.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Solanum_lycopersicum_leaves_with_spider_mite_or_thrips_damage_in_Dnipro_by_baby-bear.org.jpg/1280px-Solanum_lycopersicum_leaves_with_spider_mite_or_thrips_damage_in_Dnipro_by_baby-bear.org.jpg',
   oidio:
-    'https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Powdery_mildew_on_maple_leaf.jpg/500px-Powdery_mildew_on_maple_leaf.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Powdery_mildew_on_maple_leaf.jpg/1280px-Powdery_mildew_on_maple_leaf.jpg',
   pulgao:
-    'https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Aphids_infesting_a_leaf.jpg/500px-Aphids_infesting_a_leaf.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Aphids_infesting_a_leaf.jpg/1280px-Aphids_infesting_a_leaf.jpg',
 }
