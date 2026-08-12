@@ -2,12 +2,16 @@ import { db } from './schema'
 import { ESPECIES_INICIAIS } from './seedSpecies'
 import { gerarItensLojaIniciais } from './seedShop'
 
-/** Semeia especies, loja e o registo do jogador na primeira vez que a app abre. */
+/**
+ * Semeia especies, loja e o registo do jogador. As especies sao sempre
+ * "upsert" (bulkPut, chave string estavel) em vez de so semear na
+ * primeira vez -- assim, se o catalogo mudar no codigo (ex: campos novos
+ * como imagemUrl), quem ja tinha a app aberta antes fica com os dados
+ * corrigidos sozinho no proximo carregamento, sem precisar de limpar
+ * dados do site manualmente (foi um problema real ao testar no iOS).
+ */
 export async function inicializarDb() {
-  const totalEspecies = await db.especies.count()
-  if (totalEspecies === 0) {
-    await db.especies.bulkAdd(ESPECIES_INICIAIS)
-  }
+  await db.especies.bulkPut(ESPECIES_INICIAIS)
 
   const totalLoja = await db.loja.count()
   if (totalLoja === 0) {
