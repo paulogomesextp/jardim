@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useCallback, useRef, type ReactNode } from 'react'
 import { db } from '../db/schema'
 import type { Especie, ItemLoja, Jogador, NivelLuz } from '../db/schema'
 import {
@@ -17,6 +17,7 @@ import {
   type PlantaComEspecie,
 } from '../db/actions'
 import { detetarProblemas } from '../game/notificacoes'
+import { proximaRegaInfo } from '../game/temporizadores'
 import { PlantStage } from './PlantStage'
 import { Carrossel } from './Carrossel'
 import { Folha } from './Folha'
@@ -106,6 +107,55 @@ export function GardenView() {
     await recarregar()
   }
 
+  function renderPlantStage({ planta, especieNome, especie }: PlantaComEspecie) {
+    return (
+      <PlantStage
+        planta={planta}
+        especieNome={especieNome}
+        especie={especie}
+        onRegar={async () => {
+          await regarPlanta(planta.id!)
+          await recarregar()
+        }}
+        onMudarSol={async (posicao: NivelLuz) => {
+          await mudarPosicaoSol(planta.id!, posicao)
+          await recarregar()
+        }}
+        onTransplantar={async (incrementoCm: number) => {
+          const resultado = await transplantarVaso(planta.id!, incrementoCm)
+          if (!resultado.ok) avisar(resultado.erro)
+          await recarregar()
+        }}
+        onTratarPraga={async () => {
+          const resultado = await tratarPragaManual(planta.id!)
+          avisar(resultado.sucesso ? 'Tratamento resultou! 🌿' : 'O tratamento falhou desta vez -- tenta outra vez ou compra um remédio.')
+          await recarregar()
+        }}
+        remedioDisponivel={remedios.find((r) => r.pragaAlvo === planta.pragaAtual)}
+        onComprarRemedio={async (itemId: number) => {
+          const resultado = await comprarETratarComRemedio(itemId, planta.id!)
+          if (resultado.ok) avisar('Remédio aplicado, praga tratada garantidamente! 🧪')
+          else avisar(resultado.erro)
+          await recarregar()
+        }}
+        onVender={async () => {
+          const resultado = await venderPlanta(planta.id!)
+          if (resultado.ok) avisar(`Vendida por ${resultado.ganho}🪙`)
+          else avisar(resultado.erro)
+          await recarregar()
+        }}
+      />
+    )
+  }
+
+  const emGerminacao = plantas.filter(({ planta }) => planta.fase === 'semente' || planta.fase === 'germinacao')
+  const rebentosIniciais = plantas.filter(({ planta }) => planta.fase === 'rebento')
+  const emCrescimento = plantas.filter(({ planta }) => planta.fase === 'jovem' || planta.fase === 'adulta')
+  const comProblemas = plantas.filter(({ planta, especie }) => {
+    if (planta.estado === 'praga' || planta.estado === 'stress' || planta.estado === 'morta') return true
+    return !!especie && proximaRegaInfo(planta, especie, Date.now()).atrasado
+  })
+
   return (
     <>
       <div className="app-header">
@@ -156,52 +206,30 @@ export function GardenView() {
         </div>
       </div>
 
-      <div className="secao secao--jardim">
-        <div className="secao__titulo">O teu jardim ({plantas.length})</div>
-        {plantas.length === 0 && <p className="vazio">Ainda não tens plantas -- planta uma semente acima.</p>}
-        <Carrossel
-          itens={plantas}
-          chave={({ planta }) => planta.id!}
-          render={({ planta, especieNome, especie }) => (
-            <PlantStage
-              planta={planta}
-              especieNome={especieNome}
-              especie={especie}
-              onRegar={async () => {
-                await regarPlanta(planta.id!)
-                await recarregar()
-              }}
-              onMudarSol={async (posicao: NivelLuz) => {
-                await mudarPosicaoSol(planta.id!, posicao)
-                await recarregar()
-              }}
-              onTransplantar={async (incrementoCm: number) => {
-                const resultado = await transplantarVaso(planta.id!, incrementoCm)
-                if (!resultado.ok) avisar(resultado.erro)
-                await recarregar()
-              }}
-              onTratarPraga={async () => {
-                const resultado = await tratarPragaManual(planta.id!)
-                avisar(resultado.sucesso ? 'Tratamento resultou! 🌿' : 'O tratamento falhou desta vez -- tenta outra vez ou compra um remédio.')
-                await recarregar()
-              }}
-              remedioDisponivel={remedios.find((r) => r.pragaAlvo === planta.pragaAtual)}
-              onComprarRemedio={async (itemId: number) => {
-                const resultado = await comprarETratarComRemedio(itemId, planta.id!)
-                if (resultado.ok) avisar('Remédio aplicado, praga tratada garantidamente! 🧪')
-                else avisar(resultado.erro)
-                await recarregar()
-              }}
-              onVender={async () => {
-                const resultado = await venderPlanta(planta.id!)
-                if (resultado.ok) avisar(`Vendida por ${resultado.ganho}🪙`)
-                else avisar(resultado.erro)
-                await recarregar()
-              }}
-            />
-          )}
-        />
-      </div>
+      <SecaoJardim titulo="Sementes em Germinação" itens={emGerminacao} mensagemVazia="Nenhuma semente a germinar neste momento." render={renderPlantStage} />
+      <SecaoJardim titulo="Rebentos Iniciais" itens={rebentosIniciais} mensagemVazia="Nenhum rebento inicial neste momento." render={renderPlantStage} />
+      <SecaoJardim titulo="Plantas em Crescimento" itens={emCrescimento} mensagemVazia="Nenhuma planta em crescimento neste momento." render={renderPlantStage} />
+      <SecaoJardim titulo="Plantas com Doenças" itens={comProblemas} mensagemVazia="Nenhuma planta com problemas -- tudo saudável! 🌿" render={renderPlantStage} />
+      <SecaoJardim titulo="Todas as Plantas" itens={plantas} mensagemVazia="Ainda não tens plantas -- planta uma semente acima." render={renderPlantStage} />
     </>
+  )
+}
+
+interface SecaoJardimProps {
+  titulo: string
+  itens: PlantaComEspecie[]
+  mensagemVazia: string
+  render: (item: PlantaComEspecie) => ReactNode
+}
+
+function SecaoJardim({ titulo, itens, mensagemVazia, render }: SecaoJardimProps) {
+  return (
+    <div className="secao secao--jardim">
+      <div className="secao__titulo">
+        {titulo} ({itens.length})
+      </div>
+      {itens.length === 0 && <p className="vazio">{mensagemVazia}</p>}
+      <Carrossel itens={itens} chave={({ planta }) => planta.id!} render={render} />
+    </div>
   )
 }

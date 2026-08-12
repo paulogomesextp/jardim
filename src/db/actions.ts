@@ -1,6 +1,73 @@
-import { db, type Especie, type ItemLoja, type NivelLuz, type PlantaPossuida } from './schema'
+import { db, type Especie, type Fase, type ItemLoja, type NivelLuz, type PlantaPossuida } from './schema'
 import { processarAoAbrir } from '../game/growth'
 import { CHANCE_SUCESSO_TRATAMENTO_MANUAL, GRACA_MANUAL_HORAS, GRACA_REMEDIO_HORAS } from '../game/pragas'
+
+const HORA_MS = 3_600_000
+const FASES_DEMO: Exclude<Fase, 'semente'>[] = ['germinacao', 'rebento', 'jovem', 'adulta']
+const ORDEM_LUZ: NivelLuz[] = ['sombra', 'sombra_parcial', 'sol_parcial', 'sol_pleno']
+
+function embaralhar<T>(itens: T[]): T[] {
+  const copia = [...itens]
+  for (let i = copia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[copia[i], copia[j]] = [copia[j], copia[i]]
+  }
+  return copia
+}
+
+/** Devolve uma posicao de sol a 2+ niveis de distancia do ideal -- suficiente para o motor detetar oidio (ver game/pragas.ts). */
+function luzQueCausaOidio(luzIdeal: NivelLuz): NivelLuz {
+  const idx = ORDEM_LUZ.indexOf(luzIdeal)
+  return ORDEM_LUZ[idx <= 1 ? ORDEM_LUZ.length - 1 : 0]
+}
+
+/**
+ * Semeia o jardim com uma planta de cada espécie do catálogo (10, uma por
+ * fase de crescimento aleatória), com 2 delas a ter um problema ativo (uma
+ * com sede, outra com uma praga) -- só corre se o jardim estiver vazio
+ * (primeira abertura de sempre), para não voltar a encher o jardim de
+ * quem já estava a jogar.
+ *
+ * `estado`/`pragaAtual` NÃO são escolhidos à mão -- `processarTodasAsPlantas`
+ * (chamado logo a seguir, ao abrir a app) recalcula-os sempre a partir das
+ * condições reais (`avaliarPraga` em game/pragas.ts), por isso a "praga" é
+ * criada tornando o sol da planta errado (2+ níveis do ideal -- dá oídio),
+ * não escrevendo o campo diretamente; escrever `estado: 'praga'` aqui seria
+ * ignorado no primeiro recálculo.
+ */
+export async function semearJardimDemo() {
+  if ((await db.plantas.count()) > 0) return
+  const especies = await db.especies.toArray()
+  if (especies.length === 0) return
+
+  const agora = Date.now()
+  const [indiceSede, indicePraga] = embaralhar(especies.map((_, i) => i)).slice(0, 2)
+
+  const plantas: PlantaPossuida[] = especies.map((especie, i) => {
+    const fase = FASES_DEMO[Math.floor(Math.random() * FASES_DEMO.length)]
+    const tamanhoVasoAtual = fase === 'germinacao' ? 8 : especie.tamanhoVasoMinimoPorFase[fase]
+    const comSede = i === indiceSede
+    const comPraga = i === indicePraga
+
+    return {
+      speciesId: especie.id,
+      fase,
+      dataInicioFase: agora,
+      // atrasada mas < 2x regarCadaHoras, para dar sede sem tambem disparar aranhico
+      ultimaRega: comSede ? agora - (especie.regarCadaHoras + 6) * HORA_MS : agora,
+      posicaoSol: comPraga ? luzQueCausaOidio(especie.luzIdeal) : especie.luzIdeal,
+      tamanhoVasoAtual,
+      saude: 100,
+      estado: 'saudavel',
+      pragaAtual: null,
+      pragaImuneAte: null,
+      criadaEm: agora,
+      ultimaAvaliacao: agora,
+    }
+  })
+
+  await db.plantas.bulkAdd(plantas)
+}
 
 export async function plantarSemente(speciesId: string): Promise<number> {
   const agora = Date.now()

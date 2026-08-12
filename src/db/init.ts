@@ -1,6 +1,7 @@
 import { db } from './schema'
 import { ESPECIES_INICIAIS } from './seedSpecies'
 import { gerarItensLojaIniciais } from './seedShop'
+import { semearJardimDemo } from './actions'
 
 /**
  * Semeia especies, loja e o registo do jogador. As especies sao sempre
@@ -22,4 +23,6 @@ export async function inicializarDb() {
   if (!jogador) {
     await db.jogador.add({ id: 1, moeda: 50 })
   }
+
+  await semearJardimDemo()
 }
