@@ -3,7 +3,7 @@ import { Canvas } from '@react-three/fiber'
 import * as THREE from 'three'
 import type { PlantaComEspecie } from '../db/actions'
 import { calcularLocalizacoes, limitesJardim } from '../game/layout'
-import { escolherImagemPlanta } from '../game/imagemPlanta'
+import { corEstadoVisual } from './estadoVisual'
 import { IsoCamera } from './IsoCamera'
 import { Ground } from './Ground'
 import { Avatar } from './Avatar'
@@ -38,15 +38,15 @@ function ConteudoCena({ plantas, onSelecionarPlanta }: Props) {
       {localizacoes.map((loc) => {
         const item = plantasPorId.get(loc.id)
         if (!item) return null
-        const imagem = escolherImagemPlanta(item.planta, item.especie, Date.now())
         return (
           <Plant3D
             key={loc.id}
             x={loc.x}
             z={loc.z}
             fase={item.planta.fase}
-            estado={item.planta.estado}
-            fotoUrl={imagem.url}
+            speciesId={item.planta.speciesId}
+            nome={item.planta.nomeCustom || item.especieNome}
+            corEstado={corEstadoVisual(item.planta, item.especie, Date.now())}
             onClick={(evento) => {
               evento.stopPropagation()
               onSelecionarPlanta(loc.id)

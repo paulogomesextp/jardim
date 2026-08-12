@@ -1,8 +1,10 @@
 import * as THREE from 'three'
-import { useGLTF } from '@react-three/drei'
-import type { Fase, Estado } from '../db/schema'
-import { useRemoteTexture } from './textureCache'
+import { useGLTF, Text } from '@react-three/drei'
+import type { Fase } from '../db/schema'
 import { desmetalizar } from './materialFix'
+import { usePotClayMaterial } from './potMaterial'
+import { modeloParaEspecie } from './plantModels'
+import { submeshesDoNo } from './gltfUtils'
 
 const FASE_ESCALA: Record<Fase, number> = {
   semente: 0.3,
@@ -12,16 +14,9 @@ const FASE_ESCALA: Record<Fase, number> = {
   adulta: 1.3,
 }
 
-const COR_ESTADO: Record<Estado, string> = {
-  saudavel: '#3f7a5b',
-  stress: '#c1571f',
-  praga: '#b23a2e',
-  morta: '#6b6152',
-}
-
-// mesmo yaw fixo da IsoCamera -- a foto nunca precisa de <Billboard> dinamico
+// mesmo yaw fixo da IsoCamera -- nunca precisa de <Billboard> dinamico
 // porque a camara nunca roda, uma unica orientacao serve sempre
-const ROTACAO_FOTO = new THREE.Euler(0, Math.PI / 4, 0)
+const ROTACAO_FIXA = new THREE.Euler(0, Math.PI / 4, 0)
 
 // vaso pequeno e estreito (semente/germinacao/rebento) vs largo (jovem/adulta,
 // depois do "transplante" que ja existe no jogo) -- 2 modelos reais da Kenney
@@ -43,61 +38,62 @@ interface Props {
   x: number
   z: number
   fase: Fase
-  estado: Estado
-  fotoUrl: string | null
+  speciesId: string
+  nome: string
+  corEstado: string
   onClick?: (event: { stopPropagation: () => void }) => void
 }
 
-/**
- * O glTF do vaso tem 3 materiais (wood/woodBarkDark/_defaultMat) -- o
- * GLTFLoader parte um mesh multi-material em varios Mesh filhos (um por
- * material) dentro de um Group vazio com o nome original (sem geometria
- * propria). Por isso e preciso apanhar os Mesh filhos, nao o node "pai".
- */
-function submeshesDoVaso(no: THREE.Object3D | undefined): THREE.Mesh[] {
-  if (!no) return []
-  if ((no as THREE.Mesh).isMesh) return [no as THREE.Mesh]
-  return no.children.filter((c): c is THREE.Mesh => (c as THREE.Mesh).isMesh)
-}
-
-/** Vaso real (Kenney "Nature Kit", CC0) + foto real da especie/fase/sintoma como plano sempre virado para a camara + indicador de estado. */
-export function Plant3D({ x, z, fase, estado, fotoUrl, onClick }: Props) {
+/** Vaso + planta reais (Kenney "Nature Kit", CC0) + nome por cima + indicador de estado -- sem foto (removida a pedido do Paulo). */
+export function Plant3D({ x, z, fase, speciesId, nome, corEstado, onClick }: Props) {
   const escala = FASE_ESCALA[fase]
   const infoVaso = VASO_POR_FASE[fase]
   // useGLTF cacheia por url -- chamar para os 2 modelos e barato, so um resolve o vaso desta fase
-  const { nodes: nosPequeno } = useGLTF(MODELO_VASO_PEQUENO_URL) as unknown as { nodes: Record<string, THREE.Object3D> }
-  const { nodes: nosGrande } = useGLTF(MODELO_VASO_GRANDE_URL) as unknown as { nodes: Record<string, THREE.Object3D> }
-  const noVaso = (infoVaso.url === MODELO_VASO_PEQUENO_URL ? nosPequeno : nosGrande)[infoVaso.no]
-  const submeshes = submeshesDoVaso(noVaso)
-  for (const m of submeshes) desmetalizar(m.material)
-  // o modelo real do vaso e baixo (~0.2-0.27 unidades) -- escala visual extra
-  // so no vaso (nao na foto) para nao ficar um fio fino quase invisivel debaixo da foto
+  const { nodes: nosVasoPequeno } = useGLTF(MODELO_VASO_PEQUENO_URL) as unknown as { nodes: Record<string, THREE.Object3D> }
+  const { nodes: nosVasoGrande } = useGLTF(MODELO_VASO_GRANDE_URL) as unknown as { nodes: Record<string, THREE.Object3D> }
+  const noVaso = (infoVaso.url === MODELO_VASO_PEQUENO_URL ? nosVasoPequeno : nosVasoGrande)[infoVaso.no]
+  const submeshesVaso = submeshesDoNo(noVaso)
+  const materialVaso = usePotClayMaterial()
+
+  const modeloPlanta = modeloParaEspecie(speciesId)
+  const { nodes: nosPlanta } = useGLTF(modeloPlanta.url) as unknown as { nodes: Record<string, THREE.Object3D> }
+  const noPlantaChave = Object.keys(nosPlanta).find((k) => k !== 'tmpParent')
+  const submeshesPlanta = submeshesDoNo(noPlantaChave ? nosPlanta[noPlantaChave] : undefined)
+  for (const m of submeshesPlanta) desmetalizar(m.material)
+
   const escalaVaso = escala * 1.8
   const alturaVaso = infoVaso.altura * escalaVaso
-  const textura = useRemoteTexture(fotoUrl)
-  const ladoFoto = 0.9 * escala
+  const escalaPlanta = escala * 2.2
+  const alturaPlanta = modeloPlanta.altura * escalaPlanta
+  const alturaNome = alturaVaso + alturaPlanta + 0.18
 
   return (
     <group position={[x, 0, z]} onClick={onClick}>
       <group scale={escalaVaso}>
-        {submeshes.map((m, i) => (
-          <mesh key={i} geometry={m.geometry} material={m.material} castShadow receiveShadow />
+        {submeshesVaso.map((m, i) => (
+          <mesh key={i} geometry={m.geometry} material={materialVaso} castShadow receiveShadow />
         ))}
       </group>
-      {textura ? (
-        <mesh position={[0, alturaVaso + ladoFoto / 2, 0]} rotation={ROTACAO_FOTO}>
-          <planeGeometry args={[ladoFoto, ladoFoto]} />
-          <meshBasicMaterial map={textura} toneMapped={false} />
-        </mesh>
-      ) : (
-        <mesh position={[0, alturaVaso + 0.4 * escala, 0]}>
-          <sphereGeometry args={[0.35 * escala, 10, 8]} />
-          <meshStandardMaterial color="#5b8c5a" />
-        </mesh>
-      )}
+      <group position={[0, alturaVaso, 0]} scale={escalaPlanta}>
+        {submeshesPlanta.map((m, i) => (
+          <mesh key={i} geometry={m.geometry} material={m.material} castShadow />
+        ))}
+      </group>
+      <Text
+        position={[0, alturaNome, 0]}
+        rotation={ROTACAO_FIXA}
+        fontSize={0.16}
+        color="#1f3d2c"
+        outlineWidth={0.01}
+        outlineColor="#fbf6ea"
+        anchorX="center"
+        anchorY="bottom"
+      >
+        {nome}
+      </Text>
       <mesh position={[0, 0.02, 0.24 * escalaVaso]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[0.09, 10]} />
-        <meshBasicMaterial color={COR_ESTADO[estado]} />
+        <meshBasicMaterial color={corEstado} />
       </mesh>
     </group>
   )

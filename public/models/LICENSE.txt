@@ -2,6 +2,8 @@ Modelos 3D nesta pasta: Kenney (www.kenney.nl)
 
 - avatar.glb -- de "Mini Characters" (character-female-a.glb)
 - pot_small.glb, pot_large.glb -- de "Nature Kit"
+- plants/*.glb -- de "Nature Kit" (flores/arbustos, um modelo por
+  especie do catalogo, ver mapeamento em src/three/plantModels.ts)
 
 Licenca: CC0 (Creative Commons Zero / dominio publico)
 http://creativecommons.org/publicdomain/zero/1.0/
