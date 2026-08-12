@@ -9,7 +9,7 @@ button, select {
   background: var(--superficie);
   color: var(--texto);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  transition: background 0.15s, border-color 0.15s, transform 0.08s ease, box-shadow 0.08s ease;
 }
 
 button:hover {
@@ -249,6 +249,7 @@ select {
   width: 100%;
   height: 280px;
   background: var(--lima-suave);
+  overflow: hidden;
 }
 
 .planta-stage__imagem {
@@ -390,24 +391,180 @@ select {
   flex-wrap: wrap;
 }
 
-.acoes-linha button, .acoes-linha select {
+.acoes-linha select {
   font-size: 12px;
   padding: 7px 11px;
 }
 
-.acao-btn--praga {
+/* ---------- botoes de acao "chunky" (estilo jogo mobile: ledge 3D que "afunda" ao tocar) ---------- */
+
+.acoes-linha button {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 9px 13px;
+  border: none;
+  border-radius: 14px;
+  background: var(--lima-suave);
+  color: var(--primaria-escura);
+  box-shadow: 0 3px 0 var(--lima), var(--sombra);
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.15s;
+}
+
+.acoes-linha button:hover {
+  background: var(--lima);
+}
+
+.acoes-linha button:active {
+  transform: translateY(3px);
+  box-shadow: 0 0 0 var(--lima), var(--sombra);
+}
+
+.acoes-linha button:disabled {
+  transform: none;
+  box-shadow: 0 3px 0 var(--cinza-200), var(--sombra);
+}
+
+.acoes-linha button.acao-btn--regar {
+  background: var(--agua-suave);
+  color: #1c5a86;
+  box-shadow: 0 3px 0 var(--agua), var(--sombra);
+}
+
+.acoes-linha button.acao-btn--regar:hover {
+  background: #c3e2f7;
+}
+
+.acoes-linha button.acao-btn--regar:active {
+  box-shadow: 0 0 0 var(--agua), var(--sombra);
+}
+
+.acoes-linha button.acao-btn--praga {
   background: var(--laranja-suave);
-  border-color: var(--laranja);
   color: #7a3312;
+  box-shadow: 0 3px 0 var(--laranja), var(--sombra);
 }
 
-.acao-btn--remedio {
+.acoes-linha button.acao-btn--praga:hover {
+  background: #f4cba3;
+}
+
+.acoes-linha button.acao-btn--praga:active {
+  box-shadow: 0 0 0 var(--laranja), var(--sombra);
+}
+
+.acoes-linha button.acao-btn--remedio {
   background: var(--teal-suave);
-  border-color: var(--teal);
   color: var(--teal);
+  box-shadow: 0 3px 0 var(--teal), var(--sombra);
 }
 
-.acao-btn--vender {
+.acoes-linha button.acao-btn--remedio:hover {
+  background: #bce2db;
+}
+
+.acoes-linha button.acao-btn--remedio:active {
+  box-shadow: 0 0 0 var(--teal), var(--sombra);
+}
+
+.acoes-linha button.acao-btn--vender {
   margin-left: auto;
-  color: var(--texto-suave);
+  background: var(--ouro-suave);
+  color: #7a5309;
+  box-shadow: 0 3px 0 var(--ouro), var(--sombra);
+}
+
+.acoes-linha button.acao-btn--vender:hover {
+  background: #f0dca0;
+}
+
+.acoes-linha button.acao-btn--vender:active {
+  box-shadow: 0 0 0 var(--ouro), var(--sombra);
+}
+
+/* ---------- animacoes de feedback (agua, sol, crescimento, saude) ---------- */
+
+@keyframes flutuar-subir {
+  0% {
+    transform: translate(-50%, 0) scale(0.6);
+    opacity: 0;
+  }
+  15% {
+    transform: translate(-50%, -6px) scale(1.2);
+    opacity: 1;
+  }
+  70% {
+    transform: translate(-50%, -42px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -68px) scale(0.9);
+    opacity: 0;
+  }
+}
+
+.flutuante {
+  position: absolute;
+  left: 50%;
+  bottom: 42px;
+  font-size: 30px;
+  line-height: 1;
+  pointer-events: none;
+  animation: flutuar-subir 1.1s ease-out forwards;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  z-index: 5;
+}
+
+@keyframes brilho-varrer {
+  0% {
+    transform: translateX(-130%) skewX(-18deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateX(130%) skewX(-18deg);
+    opacity: 0;
+  }
+}
+
+.brilho-sol {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 244, 200, 0.85) 50%, transparent 70%);
+  animation: brilho-varrer 0.75s ease-out;
+  pointer-events: none;
+  z-index: 4;
+}
+
+@keyframes crescer-pulso {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.045);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.planta-stage__imagem--crescer {
+  animation: crescer-pulso 0.5s ease-out;
+}
+
+@keyframes pulso-saude {
+  0% {
+    box-shadow: 0 0 0 0 rgba(63, 122, 91, 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 9px rgba(63, 122, 91, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(63, 122, 91, 0);
+  }
+}
+
+.barra-saude--pulso {
+  animation: pulso-saude 0.65s ease-out;
 }

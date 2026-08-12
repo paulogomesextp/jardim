@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Especie, ItemLoja, NivelLuz, PlantaPossuida } from '../db/schema'
 import { CHANCE_SUCESSO_TRATAMENTO_MANUAL, NOMES_PRAGA } from '../game/pragas'
 import { custoTransplante, INCREMENTOS_VASO_CM } from '../db/actions'
@@ -49,6 +49,30 @@ export function PlantStage({
   const [incrementoEscolhido, setIncrementoEscolhido] = useState<number>(INCREMENTOS_VASO_CM[0])
   const [agora, setAgora] = useState(() => Date.now())
 
+  // pequenas animacoes de feedback por acao (estilo jogo mobile), nao guardam
+  // nenhum estado do jogo -- so efeitos visuais efemeros
+  const [flutuantes, setFlutuantes] = useState<{ id: number; emoji: string }[]>([])
+  const [pulsoSaude, setPulsoSaude] = useState(false)
+  const [brilhoSol, setBrilhoSol] = useState(false)
+  const [crescerPulso, setCrescerPulso] = useState(false)
+  const proximoIdFlutuante = useRef(0)
+
+  function dispararFlutuante(emoji: string) {
+    const id = proximoIdFlutuante.current++
+    setFlutuantes((atual) => [...atual, { id, emoji }])
+    setTimeout(() => setFlutuantes((atual) => atual.filter((f) => f.id !== id)), 1100)
+  }
+
+  function pulsarSaude() {
+    setPulsoSaude(true)
+    setTimeout(() => setPulsoSaude(false), 650)
+  }
+
+  function pulsarCrescimento() {
+    setCrescerPulso(true)
+    setTimeout(() => setCrescerPulso(false), 500)
+  }
+
   // atualiza os temporizadores (e a foto, se entrar/sair de sede) a cada minuto sem recarregar a pagina
   useEffect(() => {
     const t = setInterval(() => setAgora(Date.now()), 60_000)
@@ -64,13 +88,25 @@ export function PlantStage({
     <div className={`planta-stage ${planta.estado === 'morta' ? 'planta-stage--morta' : ''}`}>
       <div className="planta-stage__imagem-wrap">
         {imagem.url && (
-          <img className="planta-stage__imagem" src={imagem.url} alt={imagem.rotulo ?? especieNome} loading="lazy" draggable={false} />
+          <img
+            className={`planta-stage__imagem ${crescerPulso ? 'planta-stage__imagem--crescer' : ''}`}
+            src={imagem.url}
+            alt={imagem.rotulo ?? especieNome}
+            loading="lazy"
+            draggable={false}
+          />
         )}
         {imagem.rotulo && (
           <span className={`imagem-badge imagem-badge--${imagem.motivo}`}>
             {imagem.motivo === 'praga' ? '🐛' : '💧'} {imagem.rotulo}
           </span>
         )}
+        {brilhoSol && <span className="brilho-sol" aria-hidden="true" />}
+        {flutuantes.map((f) => (
+          <span key={f.id} className="flutuante" aria-hidden="true">
+            {f.emoji}
+          </span>
+        ))}
       </div>
 
       <div className="planta-stage__corpo">
@@ -85,7 +121,7 @@ export function PlantStage({
           <span className="badge badge--praga">🐛 {NOMES_PRAGA[planta.pragaAtual]}</span>
         )}
 
-        <div className="barra-saude">
+        <div className={`barra-saude ${pulsoSaude ? 'barra-saude--pulso' : ''}`}>
           <div className="barra-saude__preenchimento" style={{ width: `${planta.saude}%`, background: corSaude }} />
         </div>
 
@@ -114,8 +150,26 @@ export function PlantStage({
         {viva && (
           <div className="acoes-menu">
             <div className="acoes-linha">
-              <button onClick={onRegar}>💧 Regar</button>
-              <select value={planta.posicaoSol} onChange={(e) => onMudarSol(e.target.value as NivelLuz)}>
+              <button
+                className="acao-btn--regar"
+                onClick={() => {
+                  dispararFlutuante('💧')
+                  pulsarSaude()
+                  onRegar()
+                }}
+              >
+                💧 Regar
+              </button>
+              <select
+                value={planta.posicaoSol}
+                onChange={(e) => {
+                  const posicao = e.target.value as NivelLuz
+                  dispararFlutuante(posicao === 'sol_pleno' || posicao === 'sol_parcial' ? '☀️' : '🌥️')
+                  setBrilhoSol(true)
+                  setTimeout(() => setBrilhoSol(false), 750)
+                  onMudarSol(posicao)
+                }}
+              >
                 {Object.entries(ROTULOS_LUZ).map(([valor, rotulo]) => (
                   <option key={valor} value={valor}>
                     {rotulo}
@@ -131,18 +185,44 @@ export function PlantStage({
                   </option>
                 ))}
               </select>
-              <button onClick={() => onTransplantar(incrementoEscolhido)}>🪴 Transplantar</button>
-              <button className="acao-btn--vender" onClick={onVender}>
+              <button
+                onClick={() => {
+                  dispararFlutuante('🪴')
+                  pulsarCrescimento()
+                  onTransplantar(incrementoEscolhido)
+                }}
+              >
+                🪴 Transplantar
+              </button>
+              <button
+                className="acao-btn--vender"
+                onClick={() => {
+                  dispararFlutuante('🪙')
+                  onVender()
+                }}
+              >
                 💰 Vender
               </button>
             </div>
             {planta.estado === 'praga' && (
               <div className="acoes-linha">
-                <button className="acao-btn--praga" onClick={onTratarPraga}>
+                <button
+                  className="acao-btn--praga"
+                  onClick={() => {
+                    dispararFlutuante('✨')
+                    onTratarPraga()
+                  }}
+                >
                   🧪 Tratar grátis ({Math.round(CHANCE_SUCESSO_TRATAMENTO_MANUAL * 100)}%)
                 </button>
                 {remedioDisponivel && (
-                  <button className="acao-btn--remedio" onClick={() => onComprarRemedio(remedioDisponivel.id!)}>
+                  <button
+                    className="acao-btn--remedio"
+                    onClick={() => {
+                      dispararFlutuante('💊')
+                      onComprarRemedio(remedioDisponivel.id!)
+                    }}
+                  >
                     💊 {remedioDisponivel.nome} ({remedioDisponivel.preco}🪙)
                   </button>
                 )}
