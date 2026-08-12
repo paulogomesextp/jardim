@@ -1,7 +1,8 @@
-import { useState } from 'react'
-import type { ItemLoja, NivelLuz, PlantaPossuida } from '../db/schema'
+import { useEffect, useState } from 'react'
+import type { Especie, ItemLoja, NivelLuz, PlantaPossuida } from '../db/schema'
 import { CHANCE_SUCESSO_TRATAMENTO_MANUAL, NOMES_PRAGA } from '../game/pragas'
 import { custoTransplante, INCREMENTOS_VASO_CM } from '../db/actions'
+import { formatarHoras, proximaFaseInfo, proximaRegaInfo } from '../game/temporizadores'
 
 const ROTULOS_LUZ: Record<NivelLuz, string> = {
   sol_pleno: 'Sol pleno',
@@ -21,6 +22,7 @@ const ROTULOS_FASE: Record<string, string> = {
 interface Props {
   planta: PlantaPossuida
   especieNome: string
+  especie: Especie | undefined
   onRegar: () => void
   onMudarSol: (posicao: NivelLuz) => void
   onTransplantar: (incrementoCm: number) => void
@@ -33,6 +35,7 @@ interface Props {
 export function PlantCard({
   planta,
   especieNome,
+  especie,
   onRegar,
   onMudarSol,
   onTransplantar,
@@ -41,82 +44,102 @@ export function PlantCard({
   remedioDisponivel,
   onComprarRemedio,
 }: Props) {
-  const corSaude = planta.saude >= 70 ? '#166534' : planta.saude >= 40 ? '#9A3412' : '#991B1B'
+  const corSaude = planta.saude >= 70 ? 'var(--primaria)' : planta.saude >= 40 ? 'var(--aviso)' : 'var(--erro)'
   const [incrementoEscolhido, setIncrementoEscolhido] = useState<number>(INCREMENTOS_VASO_CM[0])
+  const [agora, setAgora] = useState(() => Date.now())
+
+  // atualiza os temporizadores a cada minuto sem precisar de recarregar a pagina
+  useEffect(() => {
+    const t = setInterval(() => setAgora(Date.now()), 60_000)
+    return () => clearInterval(t)
+  }, [])
+
+  const viva = planta.estado !== 'morta'
+  const rega = especie && viva ? proximaRegaInfo(planta, especie, agora) : null
+  const faseInfo = especie && viva ? proximaFaseInfo(planta, especie, agora) : null
 
   return (
-    <div
-      style={{
-        border: '1px solid #E2E8F0',
-        borderRadius: 12,
-        padding: 16,
-        background: planta.estado === 'morta' ? '#F1F5F9' : '#FFFFFF',
-        opacity: planta.estado === 'morta' ? 0.6 : 1,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 8,
-        minWidth: 220,
-      }}
-    >
-      <strong>{planta.nomeCustom || especieNome}</strong>
-      <span style={{ fontSize: 13, color: '#334155' }}>
-        Fase: {ROTULOS_FASE[planta.fase]} {planta.estado === 'morta' ? '· Morta 💀' : ''}
-        {planta.estado === 'praga' && planta.pragaAtual ? ` · 🐛 ${NOMES_PRAGA[planta.pragaAtual]}` : ''}
-      </span>
+    <div className={`planta-card ${planta.estado === 'morta' ? 'planta-card--morta' : ''}`}>
+      {especie?.imagemUrl && <img className="planta-card__imagem" src={especie.imagemUrl} alt={especieNome} loading="lazy" />}
 
-      <div style={{ background: '#F1F5F9', borderRadius: 6, overflow: 'hidden', height: 10 }}>
-        <div
-          style={{
-            width: `${planta.saude}%`,
-            background: corSaude,
-            height: '100%',
-            transition: 'width 0.3s',
-          }}
-        />
-      </div>
-      <span style={{ fontSize: 12, color: corSaude }}>Saúde: {Math.round(planta.saude)}/100</span>
-
-      <span style={{ fontSize: 12, color: '#64748B' }}>
-        Vaso: {planta.tamanhoVasoAtual}cm · Posição: {ROTULOS_LUZ[planta.posicaoSol]}
-      </span>
-
-      {planta.estado !== 'morta' && (
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
-          <button onClick={onRegar}>💧 Regar</button>
-          <select
-            value={planta.posicaoSol}
-            onChange={(e) => onMudarSol(e.target.value as NivelLuz)}
-          >
-            {Object.entries(ROTULOS_LUZ).map(([valor, rotulo]) => (
-              <option key={valor} value={valor}>
-                {rotulo}
-              </option>
-            ))}
-          </select>
-          <select
-            value={incrementoEscolhido}
-            onChange={(e) => setIncrementoEscolhido(Number(e.target.value))}
-          >
-            {INCREMENTOS_VASO_CM.map((cm) => (
-              <option key={cm} value={cm}>
-                +{cm}cm ({custoTransplante(cm)}🪙)
-              </option>
-            ))}
-          </select>
-          <button onClick={() => onTransplantar(incrementoEscolhido)}>🪴 Transplantar</button>
-          {planta.estado === 'praga' && (
-            <button onClick={onTratarPraga}>
-              🧪 Tratar praga (grátis, {Math.round(CHANCE_SUCESSO_TRATAMENTO_MANUAL * 100)}% chance)
-            </button>
-          )}
-          {planta.estado === 'praga' && remedioDisponivel && (
-            <button onClick={() => onComprarRemedio(remedioDisponivel.id!)}>
-              💊 {remedioDisponivel.nome} — garantido ({remedioDisponivel.preco}🪙)
-            </button>
-          )}
-          <button onClick={onVender}>💰 Vender</button>
+      <div className="planta-card__corpo">
+        <div className="planta-card__topo">
+          <span className="planta-card__nome">{planta.nomeCustom || especieNome}</span>
+          <span className={`badge ${planta.estado === 'morta' ? 'badge--morta' : 'badge--fase'}`}>
+            {planta.estado === 'morta' ? 'Morta 💀' : ROTULOS_FASE[planta.fase]}
+          </span>
         </div>
-      )}
+
+        {planta.estado === 'praga' && planta.pragaAtual && (
+          <span className="badge badge--praga">🐛 {NOMES_PRAGA[planta.pragaAtual]}</span>
+        )}
+
+        <div className="barra-saude">
+          <div className="barra-saude__preenchimento" style={{ width: `${planta.saude}%`, background: corSaude }} />
+        </div>
+
+        <div className="planta-card__stats">
+          <span>Saúde: {Math.round(planta.saude)}/100</span>
+          <span>
+            Vaso: {planta.tamanhoVasoAtual}cm · {ROTULOS_LUZ[planta.posicaoSol]}
+          </span>
+        </div>
+
+        {(rega || faseInfo) && (
+          <div className="chip-row">
+            {rega && (
+              <span className={`temporizador ${rega.atrasado ? 'temporizador--atrasado' : rega.horas < 6 ? 'temporizador--brevemente' : ''}`}>
+                💧 {rega.atrasado ? `atrasada ${formatarHoras(rega.horas)}` : `em ${formatarHoras(rega.horas)}`}
+              </span>
+            )}
+            {faseInfo && (
+              <span className={`temporizador ${faseInfo.atrasado ? '' : faseInfo.horas < 6 ? 'temporizador--brevemente' : ''}`}>
+                🌱 {faseInfo.atrasado ? 'pronta a avançar' : `próx. fase em ${formatarHoras(faseInfo.horas)}`}
+              </span>
+            )}
+          </div>
+        )}
+
+        {viva && (
+          <div className="acoes-menu">
+            <div className="acoes-linha">
+              <button onClick={onRegar}>💧 Regar</button>
+              <select value={planta.posicaoSol} onChange={(e) => onMudarSol(e.target.value as NivelLuz)}>
+                {Object.entries(ROTULOS_LUZ).map(([valor, rotulo]) => (
+                  <option key={valor} value={valor}>
+                    {rotulo}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="acoes-linha">
+              <select value={incrementoEscolhido} onChange={(e) => setIncrementoEscolhido(Number(e.target.value))}>
+                {INCREMENTOS_VASO_CM.map((cm) => (
+                  <option key={cm} value={cm}>
+                    +{cm}cm ({custoTransplante(cm)}🪙)
+                  </option>
+                ))}
+              </select>
+              <button onClick={() => onTransplantar(incrementoEscolhido)}>🪴 Transplantar</button>
+              <button className="acao-btn--vender" onClick={onVender}>
+                💰 Vender
+              </button>
+            </div>
+            {planta.estado === 'praga' && (
+              <div className="acoes-linha">
+                <button className="acao-btn--praga" onClick={onTratarPraga}>
+                  🧪 Tratar grátis ({Math.round(CHANCE_SUCESSO_TRATAMENTO_MANUAL * 100)}%)
+                </button>
+                {remedioDisponivel && (
+                  <button className="acao-btn--remedio" onClick={() => onComprarRemedio(remedioDisponivel.id!)}>
+                    💊 {remedioDisponivel.nome} ({remedioDisponivel.preco}🪙)
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

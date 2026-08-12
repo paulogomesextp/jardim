@@ -7,6 +7,7 @@ const especie: Especie = {
   id: 'teste',
   nome: 'Planta de Teste',
   categoria: 'flor',
+  imagemUrl: '',
   luzIdeal: 'sol_pleno',
   regarCadaHoras: 24,
   humidadeIdealMin: 50,

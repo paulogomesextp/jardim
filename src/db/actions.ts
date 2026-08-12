@@ -1,4 +1,4 @@
-import { db, type ItemLoja, type NivelLuz, type PlantaPossuida } from './schema'
+import { db, type Especie, type ItemLoja, type NivelLuz, type PlantaPossuida } from './schema'
 import { processarAoAbrir } from '../game/growth'
 import { CHANCE_SUCESSO_TRATAMENTO_MANUAL, GRACA_MANUAL_HORAS, GRACA_REMEDIO_HORAS } from '../game/pragas'
 
@@ -157,6 +157,7 @@ export async function listarLoja(): Promise<ItemLoja[]> {
 export interface PlantaComEspecie {
   planta: PlantaPossuida
   especieNome: string
+  especie: Especie | undefined
 }
 
 export async function listarPlantasComEspecie(): Promise<PlantaComEspecie[]> {
@@ -168,5 +169,6 @@ export async function listarPlantasComEspecie(): Promise<PlantaComEspecie[]> {
     .map((planta) => ({
       planta,
       especieNome: especiesPorId.get(planta.speciesId)?.nome ?? planta.speciesId,
+      especie: especiesPorId.get(planta.speciesId),
     }))
 }

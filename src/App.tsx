@@ -13,8 +13,7 @@ function App() {
   if (!pronto) return <p style={{ padding: 24 }}>A carregar o jardim...</p>
 
   return (
-    <main style={{ maxWidth: 900, margin: '0 auto', padding: 24, fontFamily: 'system-ui, sans-serif' }}>
-      <h1 style={{ color: '#166534' }}>🌿 Jardim</h1>
+    <main className="app-shell">
       <GardenView />
     </main>
   )

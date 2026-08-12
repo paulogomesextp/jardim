@@ -8,12 +8,20 @@ import type { Especie } from './schema'
  * RELATIVA entre especies tenta refletir a realidade (ex: cacto e alecrim
  * crescem mais devagar e toleram muito mais tempo sem rega que petunia/
  * tomateiro).
+ *
+ * imagemUrl aponta para fotos reais no Wikimedia Commons (via API da
+ * Wikipedia) -- dependencia de uma CDN externa, sem controlo se o
+ * ficheiro for movido/apagado la; funciona bem para um projeto pessoal,
+ * mas nao e o que se usaria num produto a serio (nesse caso seriam
+ * imagens proprias hospedadas no repositorio).
  */
 export const ESPECIES_INICIAIS: Especie[] = [
   {
     id: 'morangueiro',
     nome: 'Morangueiro',
     categoria: 'fruta',
+    imagemUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Garden_strawberry_%28Fragaria_%C3%97_ananassa%29_single2.jpg/330px-Garden_strawberry_%28Fragaria_%C3%97_ananassa%29_single2.jpg',
     luzIdeal: 'sol_pleno',
     regarCadaHoras: 48,
     humidadeIdealMin: 60,
@@ -26,6 +34,8 @@ export const ESPECIES_INICIAIS: Especie[] = [
     id: 'tomate_cereja',
     nome: 'Tomate-cereja',
     categoria: 'fruta',
+    imagemUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Tomates_cerises_Luc_Viatour.jpg/330px-Tomates_cerises_Luc_Viatour.jpg',
     luzIdeal: 'sol_pleno',
     regarCadaHoras: 24,
     humidadeIdealMin: 50,
@@ -38,6 +48,7 @@ export const ESPECIES_INICIAIS: Especie[] = [
     id: 'alfazema',
     nome: 'Alfazema',
     categoria: 'arbusto',
+    imagemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Single_lavender_flower02.jpg/330px-Single_lavender_flower02.jpg',
     luzIdeal: 'sol_pleno',
     regarCadaHoras: 72,
     humidadeIdealMin: 30,
@@ -50,6 +61,7 @@ export const ESPECIES_INICIAIS: Especie[] = [
     id: 'suculenta',
     nome: 'Suculenta (Echeveria)',
     categoria: 'vaso',
+    imagemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Echeveria_elegans_-_1.jpg/330px-Echeveria_elegans_-_1.jpg',
     luzIdeal: 'sol_parcial',
     regarCadaHoras: 96,
     humidadeIdealMin: 20,
@@ -62,6 +74,8 @@ export const ESPECIES_INICIAIS: Especie[] = [
     id: 'petunia',
     nome: 'Petúnia',
     categoria: 'flor',
+    imagemUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Pet%C3%BAnia_%28do_tupi_petyma%2C_%27tabaco%27%29.jpg/330px-Pet%C3%BAnia_%28do_tupi_petyma%2C_%27tabaco%27%29.jpg',
     luzIdeal: 'sol_pleno',
     regarCadaHoras: 36,
     humidadeIdealMin: 55,
@@ -74,6 +88,7 @@ export const ESPECIES_INICIAIS: Especie[] = [
     id: 'calendula',
     nome: 'Calêndula',
     categoria: 'flor',
+    imagemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Calendula_January_2008-1_filtered.jpg/330px-Calendula_January_2008-1_filtered.jpg',
     luzIdeal: 'sol_pleno',
     regarCadaHoras: 48,
     humidadeIdealMin: 45,
@@ -86,6 +101,7 @@ export const ESPECIES_INICIAIS: Especie[] = [
     id: 'alecrim',
     nome: 'Alecrim',
     categoria: 'arbusto',
+    imagemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Rosemary_in_bloom.JPG/330px-Rosemary_in_bloom.JPG',
     luzIdeal: 'sol_pleno',
     regarCadaHoras: 120,
     humidadeIdealMin: 20,
@@ -98,6 +114,7 @@ export const ESPECIES_INICIAIS: Especie[] = [
     id: 'cacto',
     nome: 'Cacto (Mammillaria)',
     categoria: 'vaso',
+    imagemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Mammillaria_tayloriorum.jpg/330px-Mammillaria_tayloriorum.jpg',
     luzIdeal: 'sol_pleno',
     regarCadaHoras: 168,
     humidadeIdealMin: 10,

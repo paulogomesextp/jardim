@@ -65,46 +65,46 @@ export function GardenView() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <div style={{ fontWeight: 600 }}>🪙 {jogador?.moeda ?? 0} moedas</div>
+    <>
+      <div className="app-header">
+        <h1>🌿 Jardim</h1>
+        <span className="coin-pill">🪙 {jogador?.moeda ?? 0}</span>
+      </div>
 
-      {mensagem && (
-        <div style={{ background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: 8, padding: 8, fontSize: 13 }}>
-          {mensagem}
-        </div>
-      )}
+      {mensagem && <div className="mensagem-toast">{mensagem}</div>}
 
-      <div>
-        <h2 style={{ fontSize: 16, marginBottom: 8 }}>Plantar semente nova (grátis, para testes)</h2>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <div className="secao">
+        <div className="secao__titulo">Plantar semente nova (grátis, para testes)</div>
+        <div className="chip-row">
           {especies.map((e) => (
-            <button key={e.id} onClick={() => plantar(e.id)}>
+            <button key={e.id} className="chip" onClick={() => plantar(e.id)}>
               🌱 {e.nome}
             </button>
           ))}
         </div>
       </div>
 
-      <div>
-        <h2 style={{ fontSize: 16, marginBottom: 8 }}>Loja de sementes</h2>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <div className="secao">
+        <div className="secao__titulo">Loja de sementes</div>
+        <div className="chip-row">
           {sementes.map((item) => (
-            <button key={item.id} onClick={() => comprarSemente(item.id!)}>
+            <button key={item.id} className="chip" onClick={() => comprarSemente(item.id!)}>
               🛒 {item.nome} — {item.preco}🪙
             </button>
           ))}
         </div>
       </div>
 
-      <div>
-        <h2 style={{ fontSize: 16, marginBottom: 8 }}>O teu jardim ({plantas.length})</h2>
-        {plantas.length === 0 && <p style={{ color: '#64748B' }}>Ainda não tens plantas -- planta uma semente acima.</p>}
-        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-          {plantas.map(({ planta, especieNome }) => (
+      <div className="secao">
+        <div className="secao__titulo">O teu jardim ({plantas.length})</div>
+        {plantas.length === 0 && <p className="vazio">Ainda não tens plantas -- planta uma semente acima.</p>}
+        <div className="jardim-grid">
+          {plantas.map(({ planta, especieNome, especie }) => (
             <PlantCard
               key={planta.id}
               planta={planta}
               especieNome={especieNome}
+              especie={especie}
               onRegar={async () => {
                 await regarPlanta(planta.id!)
                 await recarregar()
@@ -140,6 +140,6 @@ export function GardenView() {
           ))}
         </div>
       </div>
-    </div>
+    </>
   )
 }

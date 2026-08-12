@@ -16,6 +16,7 @@ export interface Especie {
   id: string
   nome: string
   categoria: Categoria
+  imagemUrl: string
   luzIdeal: NivelLuz
   regarCadaHoras: number
   humidadeIdealMin: number
