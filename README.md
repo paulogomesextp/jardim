@@ -1,32 +1,45 @@
-# React + TypeScript + Vite
+# Jardim
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Jogo de jardinagem pessoal — cuidar de plantas reais com mecânica de espera
+tipo Travian/Ikariam (semente → germinação → transplantes de vaso em vaso →
+colheita/venda), onde a qualidade dos cuidados (sol, água, tamanho do vaso)
+influencia o resultado. PWA instalável, corre inteiramente no browser.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Vite + React + TypeScript
+- `vite-plugin-pwa` (manifest + service worker)
+- Dexie.js (IndexedDB) como base de dados local — sem servidor/backend
+- Vitest para os testes do motor de jogo
 
-## React Compiler
+## Comandos
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```
+npm install
+npm run dev       # servidor de desenvolvimento local
+npm test          # corre a suite de testes (motor de crescimento/cuidados)
+npm run build     # type-check + build de produção
+npm run lint      # oxlint
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Estrutura
+
+```
+src/
+  db/
+    schema.ts       -- tabelas Dexie (Especie, PlantaPossuida, Jogador, ItemLoja)
+    seedSpecies.ts   -- catálogo inicial de espécies
+    init.ts          -- semeia a BD na primeira abertura
+  game/
+    growth.ts        -- motor de progressão (funções puras)
+    care.ts           -- efeitos de água/sol/vaso na saúde
+  components/
+    GardenView.tsx, PlantCard.tsx
+```
+
+## Estado atual
+
+Fase 1 (fundação) concluída: motor de crescimento testado, catálogo com 8
+espécies (2 por categoria: fruta, flor, arbusto, vaso). Por fazer: pragas e
+tratamento, loja de sementes/remédios e economia, UI de transplante de vaso
+em vaso, notificações.
