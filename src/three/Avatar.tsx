@@ -4,6 +4,7 @@ import { useGLTF, useAnimations } from '@react-three/drei'
 import * as THREE from 'three'
 import { inputVector, moveTarget, VELOCIDADE_AVATAR } from './movement'
 import { CAM_OFFSET } from './IsoCamera'
+import { desmetalizar } from './materialFix'
 
 const MODELO_AVATAR_URL = `${import.meta.env.BASE_URL}models/avatar.glb`
 useGLTF.preload(MODELO_AVATAR_URL)
@@ -21,6 +22,12 @@ function ModeloAvatar({ aAndar }: { aAndar: boolean }) {
   const modeloRef = useRef<THREE.Group>(null!)
   const { scene, animations } = useGLTF(MODELO_AVATAR_URL)
   const { actions } = useAnimations(animations, modeloRef)
+
+  useEffect(() => {
+    scene.traverse((obj) => {
+      if (obj instanceof THREE.Mesh) desmetalizar(obj.material)
+    })
+  }, [scene])
 
   useEffect(() => {
     actions.idle?.reset().fadeIn(0.25).play()

@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { useGLTF } from '@react-three/drei'
 import type { Fase, Estado } from '../db/schema'
 import { useRemoteTexture } from './textureCache'
+import { desmetalizar } from './materialFix'
 
 const FASE_ESCALA: Record<Fase, number> = {
   semente: 0.3,
@@ -47,23 +48,42 @@ interface Props {
   onClick?: (event: { stopPropagation: () => void }) => void
 }
 
+/**
+ * O glTF do vaso tem 3 materiais (wood/woodBarkDark/_defaultMat) -- o
+ * GLTFLoader parte um mesh multi-material em varios Mesh filhos (um por
+ * material) dentro de um Group vazio com o nome original (sem geometria
+ * propria). Por isso e preciso apanhar os Mesh filhos, nao o node "pai".
+ */
+function submeshesDoVaso(no: THREE.Object3D | undefined): THREE.Mesh[] {
+  if (!no) return []
+  if ((no as THREE.Mesh).isMesh) return [no as THREE.Mesh]
+  return no.children.filter((c): c is THREE.Mesh => (c as THREE.Mesh).isMesh)
+}
+
 /** Vaso real (Kenney "Nature Kit", CC0) + foto real da especie/fase/sintoma como plano sempre virado para a camara + indicador de estado. */
 export function Plant3D({ x, z, fase, estado, fotoUrl, onClick }: Props) {
   const escala = FASE_ESCALA[fase]
   const infoVaso = VASO_POR_FASE[fase]
   // useGLTF cacheia por url -- chamar para os 2 modelos e barato, so um resolve o vaso desta fase
-  const { nodes: nosPequeno } = useGLTF(MODELO_VASO_PEQUENO_URL) as unknown as { nodes: Record<string, THREE.Mesh> }
-  const { nodes: nosGrande } = useGLTF(MODELO_VASO_GRANDE_URL) as unknown as { nodes: Record<string, THREE.Mesh> }
-  const vaso = (infoVaso.url === MODELO_VASO_PEQUENO_URL ? nosPequeno : nosGrande)[infoVaso.no]
-  const alturaVaso = infoVaso.altura * escala
+  const { nodes: nosPequeno } = useGLTF(MODELO_VASO_PEQUENO_URL) as unknown as { nodes: Record<string, THREE.Object3D> }
+  const { nodes: nosGrande } = useGLTF(MODELO_VASO_GRANDE_URL) as unknown as { nodes: Record<string, THREE.Object3D> }
+  const noVaso = (infoVaso.url === MODELO_VASO_PEQUENO_URL ? nosPequeno : nosGrande)[infoVaso.no]
+  const submeshes = submeshesDoVaso(noVaso)
+  for (const m of submeshes) desmetalizar(m.material)
+  // o modelo real do vaso e baixo (~0.2-0.27 unidades) -- escala visual extra
+  // so no vaso (nao na foto) para nao ficar um fio fino quase invisivel debaixo da foto
+  const escalaVaso = escala * 1.8
+  const alturaVaso = infoVaso.altura * escalaVaso
   const textura = useRemoteTexture(fotoUrl)
   const ladoFoto = 0.9 * escala
 
   return (
     <group position={[x, 0, z]} onClick={onClick}>
-      {vaso && (
-        <mesh geometry={vaso.geometry} material={vaso.material} scale={escala} castShadow receiveShadow />
-      )}
+      <group scale={escalaVaso}>
+        {submeshes.map((m, i) => (
+          <mesh key={i} geometry={m.geometry} material={m.material} castShadow receiveShadow />
+        ))}
+      </group>
       {textura ? (
         <mesh position={[0, alturaVaso + ladoFoto / 2, 0]} rotation={ROTACAO_FOTO}>
           <planeGeometry args={[ladoFoto, ladoFoto]} />
@@ -75,7 +95,7 @@ export function Plant3D({ x, z, fase, estado, fotoUrl, onClick }: Props) {
           <meshStandardMaterial color="#5b8c5a" />
         </mesh>
       )}
-      <mesh position={[0, 0.02, 0.24 * escala]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh position={[0, 0.02, 0.24 * escalaVaso]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[0.09, 10]} />
         <meshBasicMaterial color={COR_ESTADO[estado]} />
       </mesh>
