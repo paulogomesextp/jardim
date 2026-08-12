@@ -21,12 +21,21 @@ function luzQueCausaOidio(luzIdeal: NivelLuz): NivelLuz {
   return ORDEM_LUZ[idx <= 1 ? ORDEM_LUZ.length - 1 : 0]
 }
 
+const TOTAL_DEMO = 50
+const MIN_POR_FASE = 2 // garante que germinacao/rebento/jovem (Crescimento) tem sempre 2+ plantas cada
+const PROBLEMAS_SEDE = 2
+const PROBLEMAS_PRAGA = 2 // total 4 problemas, folga acima do minimo de 2 pedido para "Plantas com Doenças"
+
 /**
- * Semeia o jardim com uma planta de cada espécie do catálogo (10, uma por
- * fase de crescimento aleatória), com 2 delas a ter um problema ativo (uma
- * com sede, outra com uma praga) -- só corre se o jardim estiver vazio
- * (primeira abertura de sempre), para não voltar a encher o jardim de
- * quem já estava a jogar.
+ * Semeia o jardim com 50 plantas (espécie aleatória, com repetição --
+ * só há 10 espécies no catálogo), distribuídas por fase de crescimento de
+ * forma a garantir pelo menos `MIN_POR_FASE` em cada uma das 3 fases-chave
+ * (germinação, rebento, jovem -- cobrem as 3 primeiras janelas da UI, "jovem"
+ * cobre também "Plantas em Crescimento" com "adulta"), e pelo menos
+ * `PROBLEMAS_SEDE + PROBLEMAS_PRAGA` plantas com um problema ativo (sede
+ * ou praga), para "Plantas com Doenças" nunca ficar vazia. Só corre se o
+ * jardim estiver vazio (primeira abertura de sempre), para não voltar a
+ * encher o jardim de quem já estava a jogar.
  *
  * `estado`/`pragaAtual` NÃO são escolhidos à mão -- `processarTodasAsPlantas`
  * (chamado logo a seguir, ao abrir a app) recalcula-os sempre a partir das
@@ -34,6 +43,11 @@ function luzQueCausaOidio(luzIdeal: NivelLuz): NivelLuz {
  * criada tornando o sol da planta errado (2+ níveis do ideal -- dá oídio),
  * não escrevendo o campo diretamente; escrever `estado: 'praga'` aqui seria
  * ignorado no primeiro recálculo.
+ *
+ * Nota: como o motor de crescimento faz "catch-up" sempre que a app abre
+ * (ver game/growth.ts), as fases aqui sorteadas vão continuar a avançar
+ * sozinhas com o tempo real -- isto garante a distribuição só no momento
+ * da sementeira, não é uma garantia permanente ao longo dos dias.
  */
 export async function semearJardimDemo() {
   if ((await db.plantas.count()) > 0) return
@@ -41,13 +55,23 @@ export async function semearJardimDemo() {
   if (especies.length === 0) return
 
   const agora = Date.now()
-  const [indiceSede, indicePraga] = embaralhar(especies.map((_, i) => i)).slice(0, 2)
 
-  const plantas: PlantaPossuida[] = especies.map((especie, i) => {
-    const fase = FASES_DEMO[Math.floor(Math.random() * FASES_DEMO.length)]
+  const fasesForcadas = FASES_DEMO.flatMap((fase) => Array(MIN_POR_FASE).fill(fase) as (typeof fase)[])
+  const fasesRestantes = Array.from(
+    { length: TOTAL_DEMO - fasesForcadas.length },
+    () => FASES_DEMO[Math.floor(Math.random() * FASES_DEMO.length)],
+  )
+  const fasesFinais = embaralhar([...fasesForcadas, ...fasesRestantes])
+
+  const indicesEmbaralhados = embaralhar(Array.from({ length: TOTAL_DEMO }, (_, i) => i))
+  const indicesSede = new Set(indicesEmbaralhados.slice(0, PROBLEMAS_SEDE))
+  const indicesPraga = new Set(indicesEmbaralhados.slice(PROBLEMAS_SEDE, PROBLEMAS_SEDE + PROBLEMAS_PRAGA))
+
+  const plantas: PlantaPossuida[] = fasesFinais.map((fase, i) => {
+    const especie = especies[Math.floor(Math.random() * especies.length)]
     const tamanhoVasoAtual = fase === 'germinacao' ? 8 : especie.tamanhoVasoMinimoPorFase[fase]
-    const comSede = i === indiceSede
-    const comPraga = i === indicePraga
+    const comSede = indicesSede.has(i)
+    const comPraga = indicesPraga.has(i)
 
     return {
       speciesId: especie.id,
