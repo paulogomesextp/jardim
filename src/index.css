@@ -1,35 +1,45 @@
 :root {
-  --verde-900: #14532d;
-  --verde-700: #15803d;
-  --verde-600: #16a34a;
-  --verde-500: #22c55e;
-  --verde-100: #dcfce7;
-  --verde-50: #f0fdf4;
+  /* paleta "Between Leaves" -- tirada das artes da namorada do Paulo
+     (creme quente, verde-escuro, verde-lima, lavanda, laranja, teal) */
+  --creme: #f7eedd;
+  --creme-clara: #fbf6ea;
+  --verde-900: #1f3d2c;
+  --verde-700: #2c5741;
+  --verde-500: #3f7a5b;
+  --lima: #c7de7c;
+  --lima-suave: #e8f0cd;
+  --lavanda: #c6baea;
+  --lavanda-suave: #ece6f8;
+  --laranja: #e2692f;
+  --laranja-suave: #f8ddc8;
+  --teal: #1e7f72;
+  --teal-suave: #d2ece7;
 
-  --cinza-900: #1f2937;
-  --cinza-700: #374151;
-  --cinza-500: #6b7280;
-  --cinza-300: #d1d5db;
-  --cinza-200: #e5e7eb;
-  --cinza-100: #f3f4f6;
-  --cinza-50: #f9fafb;
+  --cinza-700: #6b6152;
+  --cinza-500: #8a8071;
+  --cinza-300: #ddd2ba;
+  --cinza-200: #eadfc7;
+  --cinza-100: #f2ead9;
 
-  --fundo: var(--cinza-50);
-  --superficie: #ffffff;
-  --borda: var(--cinza-200);
-  --texto: var(--cinza-900);
-  --texto-suave: var(--cinza-500);
-  --primaria: var(--verde-600);
-  --primaria-escura: var(--verde-700);
-  --primaria-fundo: var(--verde-50);
+  --fundo: var(--creme);
+  --superficie: var(--creme-clara);
+  --borda: #e7dbc0;
+  --texto: var(--verde-900);
+  --texto-suave: #7a7160;
+  --primaria: var(--verde-700);
+  --primaria-escura: var(--verde-900);
+  --primaria-fundo: var(--lima-suave);
 
-  --aviso: #d97706;
-  --erro: #dc2626;
+  --aviso: #c1571f;
+  --aviso-fundo: var(--laranja-suave);
+  --erro: #b23a2e;
+  --erro-fundo: #f3d9d0;
 
-  --sombra: 0 1px 2px rgba(31, 41, 55, 0.06), 0 1px 3px rgba(31, 41, 55, 0.08);
-  --sombra-hover: 0 4px 10px rgba(31, 41, 55, 0.08), 0 2px 4px rgba(31, 41, 55, 0.06);
-  --raio: 14px;
+  --sombra: 0 1px 2px rgba(45, 33, 15, 0.07), 0 1px 3px rgba(45, 33, 15, 0.09);
+  --sombra-hover: 0 8px 20px rgba(45, 33, 15, 0.12), 0 2px 6px rgba(45, 33, 15, 0.08);
+  --raio: 18px;
 
+  --serif: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
   --sans: 'Segoe UI', system-ui, Roboto, sans-serif;
 
   font: 15px/1.5 var(--sans);

@@ -3,6 +3,7 @@ import type { Especie, ItemLoja, NivelLuz, PlantaPossuida } from '../db/schema'
 import { CHANCE_SUCESSO_TRATAMENTO_MANUAL, NOMES_PRAGA } from '../game/pragas'
 import { custoTransplante, INCREMENTOS_VASO_CM } from '../db/actions'
 import { formatarHoras, proximaFaseInfo, proximaRegaInfo } from '../game/temporizadores'
+import { escolherImagemPlanta } from '../game/imagemPlanta'
 
 const ROTULOS_LUZ: Record<NivelLuz, string> = {
   sol_pleno: 'Sol pleno',
@@ -32,7 +33,7 @@ interface Props {
   onComprarRemedio: (itemLojaId: number) => void
 }
 
-export function PlantCard({
+export function PlantStage({
   planta,
   especieNome,
   especie,
@@ -48,7 +49,7 @@ export function PlantCard({
   const [incrementoEscolhido, setIncrementoEscolhido] = useState<number>(INCREMENTOS_VASO_CM[0])
   const [agora, setAgora] = useState(() => Date.now())
 
-  // atualiza os temporizadores a cada minuto sem precisar de recarregar a pagina
+  // atualiza os temporizadores (e a foto, se entrar/sair de sede) a cada minuto sem recarregar a pagina
   useEffect(() => {
     const t = setInterval(() => setAgora(Date.now()), 60_000)
     return () => clearInterval(t)
@@ -57,14 +58,24 @@ export function PlantCard({
   const viva = planta.estado !== 'morta'
   const rega = especie && viva ? proximaRegaInfo(planta, especie, agora) : null
   const faseInfo = especie && viva ? proximaFaseInfo(planta, especie, agora) : null
+  const imagem = escolherImagemPlanta(planta, especie, agora)
 
   return (
-    <div className={`planta-card ${planta.estado === 'morta' ? 'planta-card--morta' : ''}`}>
-      {especie?.imagemUrl && <img className="planta-card__imagem" src={especie.imagemUrl} alt={especieNome} loading="lazy" />}
+    <div className={`planta-stage ${planta.estado === 'morta' ? 'planta-stage--morta' : ''}`}>
+      <div className="planta-stage__imagem-wrap">
+        {imagem.url && (
+          <img className="planta-stage__imagem" src={imagem.url} alt={imagem.rotulo ?? especieNome} loading="lazy" draggable={false} />
+        )}
+        {imagem.rotulo && (
+          <span className={`imagem-badge imagem-badge--${imagem.motivo}`}>
+            {imagem.motivo === 'praga' ? '🐛' : '💧'} {imagem.rotulo}
+          </span>
+        )}
+      </div>
 
-      <div className="planta-card__corpo">
-        <div className="planta-card__topo">
-          <span className="planta-card__nome">{planta.nomeCustom || especieNome}</span>
+      <div className="planta-stage__corpo">
+        <div className="planta-stage__topo">
+          <span className="planta-stage__nome">{planta.nomeCustom || especieNome}</span>
           <span className={`badge ${planta.estado === 'morta' ? 'badge--morta' : 'badge--fase'}`}>
             {planta.estado === 'morta' ? 'Morta 💀' : ROTULOS_FASE[planta.fase]}
           </span>
@@ -78,7 +89,7 @@ export function PlantCard({
           <div className="barra-saude__preenchimento" style={{ width: `${planta.saude}%`, background: corSaude }} />
         </div>
 
-        <div className="planta-card__stats">
+        <div className="planta-stage__stats">
           <span>Saúde: {Math.round(planta.saude)}/100</span>
           <span>
             Vaso: {planta.tamanhoVasoAtual}cm · {ROTULOS_LUZ[planta.posicaoSol]}

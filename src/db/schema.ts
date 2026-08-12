@@ -16,7 +16,8 @@ export interface Especie {
   id: string
   nome: string
   categoria: Categoria
-  imagemUrl: string
+  imagemUrl: string // foto da planta adulta/final (fruto ou flor) -- ver game/imagemPlanta.ts
+  imagemJovemUrl: string // foto da fase jovem (folhosa, ainda sem fruto/flor)
   luzIdeal: NivelLuz
   regarCadaHoras: number
   humidadeIdealMin: number

@@ -1,4 +1,4 @@
-# Jardim
+# Between Leaves
 
 Jogo de jardinagem pessoal — cuidar de plantas reais com mecânica de espera
 tipo Travian/Ikariam (semente → germinação → transplantes de vaso em vaso →
@@ -34,7 +34,7 @@ src/
     growth.ts        -- motor de progressão (funções puras)
     care.ts           -- efeitos de água/sol/vaso na saúde
   components/
-    GardenView.tsx, PlantCard.tsx
+    GardenView.tsx, Carrossel.tsx, PlantStage.tsx, Folha.tsx
 ```
 
 ## Estado atual

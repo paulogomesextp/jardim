@@ -55,3 +55,20 @@ export const NOMES_PRAGA: Record<TipoPraga, string> = {
   oidio: 'Oídio',
   pulgao: 'Pulgão',
 }
+
+/**
+ * Fotos reais (Wikimedia Commons) do sintoma de cada praga, para
+ * substituir a foto da especie no carrossel enquanto a praga estiver
+ * ativa. Genericas (nao especificas da especie) de proposito -- nao ha
+ * fotos fiaveis de "tomateiro com oidio" etc. para as 10 especies do
+ * catalogo sem risco de imagem errada, por isso mostra-se o sintoma em
+ * qualquer folha/planta real em vez disso.
+ */
+export const IMAGENS_PRAGA: Record<TipoPraga, string> = {
+  aranhico:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Solanum_lycopersicum_leaves_with_spider_mite_or_thrips_damage_in_Dnipro_by_baby-bear.org.jpg/500px-Solanum_lycopersicum_leaves_with_spider_mite_or_thrips_damage_in_Dnipro_by_baby-bear.org.jpg',
+  oidio:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Powdery_mildew_on_maple_leaf.jpg/500px-Powdery_mildew_on_maple_leaf.jpg',
+  pulgao:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Aphids_infesting_a_leaf.jpg/500px-Aphids_infesting_a_leaf.jpg',
+}

@@ -17,7 +17,9 @@ import {
   type PlantaComEspecie,
 } from '../db/actions'
 import { detetarProblemas } from '../game/notificacoes'
-import { PlantCard } from './PlantCard'
+import { PlantStage } from './PlantStage'
+import { Carrossel } from './Carrossel'
+import { Folha } from './Folha'
 
 const INTERVALO_VERIFICACAO_MS = 5 * 60_000 // verifica problemas a cada 5 min enquanto a app estiver aberta
 
@@ -107,7 +109,13 @@ export function GardenView() {
   return (
     <>
       <div className="app-header">
-        <h1>🌿 Jardim</h1>
+        <div className="marca">
+          <Folha tamanho={38} />
+          <div className="marca__texto">
+            <h1>Between Leaves</h1>
+            <span className="marca__tagline">A little greener, one leaf at a time.</span>
+          </div>
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {permissaoNotificacoes === 'default' && (
             <button className="chip" onClick={ativarNotificacoes}>
@@ -148,13 +156,14 @@ export function GardenView() {
         </div>
       </div>
 
-      <div className="secao">
+      <div className="secao secao--jardim">
         <div className="secao__titulo">O teu jardim ({plantas.length})</div>
         {plantas.length === 0 && <p className="vazio">Ainda não tens plantas -- planta uma semente acima.</p>}
-        <div className="jardim-grid">
-          {plantas.map(({ planta, especieNome, especie }) => (
-            <PlantCard
-              key={planta.id}
+        <Carrossel
+          itens={plantas}
+          chave={({ planta }) => planta.id!}
+          render={({ planta, especieNome, especie }) => (
+            <PlantStage
               planta={planta}
               especieNome={especieNome}
               especie={especie}
@@ -190,8 +199,8 @@ export function GardenView() {
                 await recarregar()
               }}
             />
-          ))}
-        </div>
+          )}
+        />
       </div>
     </>
   )

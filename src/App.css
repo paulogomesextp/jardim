@@ -3,7 +3,7 @@
 button, select {
   font: inherit;
   font-size: 13px;
-  padding: 7px 12px;
+  padding: 8px 14px;
   border-radius: 999px;
   border: 1px solid var(--borda);
   background: var(--superficie);
@@ -13,12 +13,23 @@ button, select {
 }
 
 button:hover {
-  background: var(--cinza-100);
-  border-color: var(--cinza-300);
+  background: var(--lima-suave);
+  border-color: var(--lima);
 }
 
 button:active {
   transform: scale(0.97);
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+  transform: none;
+}
+
+button:disabled:hover {
+  background: var(--superficie);
+  border-color: var(--borda);
 }
 
 select {
@@ -30,10 +41,10 @@ select {
 .app-shell {
   max-width: 860px;
   margin: 0 auto;
-  padding: 20px 16px 48px;
+  padding: 24px 16px 56px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 22px;
 }
 
 .app-header {
@@ -41,21 +52,42 @@ select {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  flex-wrap: wrap;
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.marca__texto {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
 }
 
 .app-header h1 {
-  font-size: 22px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  font-family: var(--serif);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   color: var(--primaria-escura);
+}
+
+.marca__tagline {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
 }
 
 .coin-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--verde-100);
+  background: var(--lima-suave);
   color: var(--primaria-escura);
   font-weight: 600;
   padding: 8px 14px;
@@ -65,10 +97,10 @@ select {
 }
 
 .mensagem-toast {
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  color: #92400e;
-  border-radius: 10px;
+  background: var(--laranja-suave);
+  border: 1px solid var(--laranja);
+  color: #7a3312;
+  border-radius: 12px;
   padding: 10px 14px;
   font-size: 13px;
 }
@@ -79,17 +111,17 @@ select {
   background: var(--superficie);
   border: 1px solid var(--borda);
   border-radius: var(--raio);
-  padding: 16px;
+  padding: 18px;
   box-shadow: var(--sombra);
 }
 
 .secao__titulo {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   color: var(--texto-suave);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-bottom: 10px;
+  letter-spacing: 0.07em;
+  margin-bottom: 12px;
 }
 
 .chip-row {
@@ -99,13 +131,13 @@ select {
 }
 
 .chip {
-  background: var(--primaria-fundo);
-  border-color: var(--verde-100);
+  background: var(--lima-suave);
+  border-color: var(--lima);
   color: var(--primaria-escura);
 }
 
 .chip:hover {
-  background: var(--verde-100);
+  background: var(--lima);
 }
 
 .vazio {
@@ -113,15 +145,91 @@ select {
   font-size: 13px;
 }
 
-/* ---------- grelha de plantas ---------- */
+/* ---------- secao do jardim / carrossel ---------- */
 
-.jardim-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+.secao--jardim {
+  padding: 18px 0 20px;
+  overflow: hidden;
+}
+
+.secao--jardim > .secao__titulo {
+  padding: 0 18px;
+}
+
+.carrossel {
+  display: flex;
+  flex-direction: column;
   gap: 14px;
 }
 
-.planta-card {
+.carrossel__janela {
+  overflow: hidden;
+}
+
+.carrossel__pista {
+  display: flex;
+  touch-action: pan-y;
+  cursor: grab;
+}
+
+.carrossel__pista:active {
+  cursor: grabbing;
+}
+
+.carrossel__slide {
+  flex: 0 0 100%;
+  min-width: 0;
+  padding: 0 18px;
+  display: flex;
+  justify-content: center;
+}
+
+.carrossel__nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.carrossel__seta {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  line-height: 1;
+  border-radius: 999px;
+  background: var(--superficie);
+}
+
+.carrossel__pontos {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.carrossel__ponto {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: var(--cinza-300);
+  transition: background 0.2s, width 0.2s;
+}
+
+.carrossel__ponto--ativo {
+  background: var(--primaria);
+  width: 20px;
+}
+
+/* ---------- vista da planta (uma de cada vez) ---------- */
+
+.planta-stage {
+  width: 100%;
+  max-width: 420px;
   background: var(--superficie);
   border: 1px solid var(--borda);
   border-radius: var(--raio);
@@ -129,44 +237,71 @@ select {
   display: flex;
   flex-direction: column;
   box-shadow: var(--sombra);
-  transition: box-shadow 0.15s, transform 0.15s;
 }
 
-.planta-card:hover {
-  box-shadow: var(--sombra-hover);
-  transform: translateY(-1px);
+.planta-stage--morta {
+  opacity: 0.6;
+  filter: grayscale(0.55);
 }
 
-.planta-card--morta {
-  opacity: 0.55;
-  filter: grayscale(0.6);
-}
-
-.planta-card__imagem {
+.planta-stage__imagem-wrap {
+  position: relative;
   width: 100%;
-  height: 120px;
-  object-fit: cover;
-  background: var(--verde-50);
-  display: block;
+  height: 280px;
+  background: var(--lima-suave);
 }
 
-.planta-card__corpo {
-  padding: 12px 14px 14px;
+.planta-stage__imagem {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.imagem-badge {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 11px;
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(31, 61, 44, 0.82);
+  backdrop-filter: blur(2px);
+}
+
+.imagem-badge--sede {
+  background: rgba(194, 87, 22, 0.88);
+}
+
+.imagem-badge--praga {
+  background: rgba(126, 43, 32, 0.88);
+}
+
+.planta-stage__corpo {
+  padding: 16px 18px 20px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
-.planta-card__topo {
+.planta-stage__topo {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
 }
 
-.planta-card__nome {
-  font-weight: 600;
-  font-size: 15px;
+.planta-stage__nome {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 19px;
 }
 
 .badge {
@@ -174,24 +309,24 @@ select {
   align-items: center;
   gap: 4px;
   font-size: 11px;
-  font-weight: 600;
-  padding: 3px 8px;
+  font-weight: 700;
+  padding: 3px 9px;
   border-radius: 999px;
   white-space: nowrap;
 }
 
 .badge--fase {
-  background: var(--cinza-100);
-  color: var(--texto-suave);
+  background: var(--lavanda-suave);
+  color: var(--verde-700);
 }
 
 .badge--praga {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--laranja-suave);
+  color: #7a3312;
 }
 
 .badge--morta {
-  background: var(--cinza-200);
+  background: var(--cinza-100);
   color: var(--texto-suave);
 }
 
@@ -207,7 +342,7 @@ select {
   transition: width 0.3s;
 }
 
-.planta-card__stats {
+.planta-stage__stats {
   font-size: 12px;
   color: var(--texto-suave);
   display: flex;
@@ -220,21 +355,21 @@ select {
   align-items: center;
   gap: 4px;
   font-size: 11px;
-  font-weight: 600;
-  padding: 3px 8px;
+  font-weight: 700;
+  padding: 3px 9px;
   border-radius: 999px;
   background: var(--cinza-100);
-  color: var(--cinza-700);
+  color: var(--verde-700);
   width: fit-content;
 }
 
 .temporizador--atrasado {
-  background: #fee2e2;
+  background: var(--erro-fundo);
   color: var(--erro);
 }
 
 .temporizador--brevemente {
-  background: #fef3c7;
+  background: var(--laranja-suave);
   color: var(--aviso);
 }
 
@@ -245,7 +380,7 @@ select {
   flex-direction: column;
   gap: 8px;
   margin-top: 4px;
-  padding-top: 10px;
+  padding-top: 12px;
   border-top: 1px dashed var(--borda);
 }
 
@@ -257,19 +392,19 @@ select {
 
 .acoes-linha button, .acoes-linha select {
   font-size: 12px;
-  padding: 6px 10px;
+  padding: 7px 11px;
 }
 
 .acao-btn--praga {
-  background: #fef3c7;
-  border-color: #fde68a;
-  color: #92400e;
+  background: var(--laranja-suave);
+  border-color: var(--laranja);
+  color: #7a3312;
 }
 
 .acao-btn--remedio {
-  background: var(--verde-50);
-  border-color: var(--verde-100);
-  color: var(--primaria-escura);
+  background: var(--teal-suave);
+  border-color: var(--teal);
+  color: var(--teal);
 }
 
 .acao-btn--vender {
