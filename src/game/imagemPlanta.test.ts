@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Especie, PlantaPossuida } from '../db/schema'
 import { HORA_MS } from './care'
-import { IMAGEM_SEDE, IMAGENS_FASE_GENERICA, escolherImagemPlanta } from './imagemPlanta'
+import { IMAGEM_SEDE, IMAGENS_FASE_GENERICA, IMAGENS_REBENTO, escolherImagemPlanta } from './imagemPlanta'
 import { IMAGENS_PRAGA } from './pragas'
 
 const especie: Especie = {
@@ -54,10 +54,15 @@ describe('escolherImagemPlanta', () => {
     expect(resultado.url).not.toBe(especie.imagemUrl)
   })
 
-  it('fases semente/germinacao/rebento mostram fotos genericas partilhadas', () => {
+  it('fases semente/germinacao mostram fotos genericas partilhadas', () => {
     expect(escolherImagemPlanta(planta({ fase: 'semente' }), especie, 1 * HORA_MS).url).toBe(IMAGENS_FASE_GENERICA.semente)
     expect(escolherImagemPlanta(planta({ fase: 'germinacao' }), especie, 1 * HORA_MS).url).toBe(IMAGENS_FASE_GENERICA.germinacao)
-    expect(escolherImagemPlanta(planta({ fase: 'rebento' }), especie, 1 * HORA_MS).url).toBe(IMAGENS_FASE_GENERICA.rebento)
+  })
+
+  it('fase rebento roda entre varias fotos genericas conforme o id da planta', () => {
+    expect(escolherImagemPlanta(planta({ fase: 'rebento', id: 0 }), especie, 1 * HORA_MS).url).toBe(IMAGENS_REBENTO[0])
+    expect(escolherImagemPlanta(planta({ fase: 'rebento', id: 1 }), especie, 1 * HORA_MS).url).toBe(IMAGENS_REBENTO[1])
+    expect(escolherImagemPlanta(planta({ fase: 'rebento', id: IMAGENS_REBENTO.length }), especie, 1 * HORA_MS).url).toBe(IMAGENS_REBENTO[0])
   })
 
   it('mostra a foto de sede quando a rega esta atrasada, independentemente da fase', () => {
