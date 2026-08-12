@@ -123,4 +123,32 @@ export const ESPECIES_INICIAIS: Especie[] = [
     tamanhoVasoMinimoPorFase: { germinacao: 5, rebento: 7, jovem: 9, adulta: 11 },
     valorVendaBase: 22,
   },
+  // as "+2 espécies a definir" do conceito original -- escolhidas sem confirmar
+  // com o Paulo (ele autorizou avançar sozinho), a rever se ele preferir outras
+  {
+    id: 'manjericao',
+    nome: 'Manjericão',
+    categoria: 'arbusto',
+    imagemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Ocimum_basilicum_8zz.jpg/330px-Ocimum_basilicum_8zz.jpg',
+    luzIdeal: 'sol_pleno',
+    regarCadaHoras: 30,
+    humidadeIdealMin: 55,
+    humidadeIdealMax: 65,
+    duracaoFasesHoras: { germinacao: 5, rebento: 10, jovem: 16, adulta: 32 },
+    tamanhoVasoMinimoPorFase: { germinacao: 6, rebento: 8, jovem: 12, adulta: 16 },
+    valorVendaBase: 18,
+  },
+  {
+    id: 'girassol',
+    nome: 'Girassol',
+    categoria: 'flor',
+    imagemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Sunflower_sky_backdrop.jpg/330px-Sunflower_sky_backdrop.jpg',
+    luzIdeal: 'sol_pleno',
+    regarCadaHoras: 36,
+    humidadeIdealMin: 50,
+    humidadeIdealMax: 60,
+    duracaoFasesHoras: { germinacao: 8, rebento: 18, jovem: 28, adulta: 56 },
+    tamanhoVasoMinimoPorFase: { germinacao: 8, rebento: 14, jovem: 22, adulta: 30 },
+    valorVendaBase: 28,
+  },
 ]
