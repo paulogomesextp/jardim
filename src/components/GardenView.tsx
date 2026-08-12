@@ -205,8 +205,8 @@ export function GardenView() {
         </div>
       </div>
 
-      <SecaoJardim titulo="Rebentos Iniciais" itens={rebentosIniciais} mensagemVazia="Nenhum rebento inicial neste momento." render={renderPlantStage} />
       <SecaoJardim titulo="Plantas em Crescimento" itens={emCrescimento} mensagemVazia="Nenhuma planta em crescimento neste momento." render={renderPlantStage} />
+      <SecaoJardim titulo="Rebentos Iniciais" itens={rebentosIniciais} mensagemVazia="Nenhum rebento inicial neste momento." render={renderPlantStage} />
       <SecaoJardim titulo="Plantas com Doenças" itens={comProblemas} mensagemVazia="Nenhuma planta com problemas -- tudo saudável! 🌿" render={renderPlantStage} />
       <SecaoJardim titulo="Todas as Plantas" itens={plantas} mensagemVazia="Ainda não tens plantas -- planta uma semente acima." render={renderPlantStage} />
     </>
