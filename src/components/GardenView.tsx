@@ -148,7 +148,6 @@ export function GardenView() {
     )
   }
 
-  const emGerminacao = plantas.filter(({ planta }) => planta.fase === 'semente' || planta.fase === 'germinacao')
   const rebentosIniciais = plantas.filter(({ planta }) => planta.fase === 'rebento')
   const emCrescimento = plantas.filter(({ planta }) => planta.fase === 'jovem' || planta.fase === 'adulta')
   const comProblemas = plantas.filter(({ planta, especie }) => {
@@ -206,7 +205,6 @@ export function GardenView() {
         </div>
       </div>
 
-      <SecaoJardim titulo="Sementes em Germinação" itens={emGerminacao} mensagemVazia="Nenhuma semente a germinar neste momento." render={renderPlantStage} />
       <SecaoJardim titulo="Rebentos Iniciais" itens={rebentosIniciais} mensagemVazia="Nenhum rebento inicial neste momento." render={renderPlantStage} />
       <SecaoJardim titulo="Plantas em Crescimento" itens={emCrescimento} mensagemVazia="Nenhuma planta em crescimento neste momento." render={renderPlantStage} />
       <SecaoJardim titulo="Plantas com Doenças" itens={comProblemas} mensagemVazia="Nenhuma planta com problemas -- tudo saudável! 🌿" render={renderPlantStage} />

@@ -24,8 +24,8 @@ export const ESPECIES_INICIAIS: Especie[] = [
     id: 'morangueiro',
     nome: 'Morangueiro',
     categoria: 'fruta',
-    imagemUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Garden_strawberry_%28Fragaria_%C3%97_ananassa%29_single2.jpg/1280px-Garden_strawberry_%28Fragaria_%C3%97_ananassa%29_single2.jpg',
+    // escolhida pelo Paulo (opcao 3) no levantamento de fotos de 2026-08-12
+    imagemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Strawberries.JPG/1280px-Strawberries.JPG',
     imagemJovemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Leaf_of_Strawberry_plant.jpg/1280px-Leaf_of_Strawberry_plant.jpg',
     luzIdeal: 'sol_pleno',
     regarCadaHoras: 48,
@@ -39,8 +39,9 @@ export const ESPECIES_INICIAIS: Especie[] = [
     id: 'tomate_cereja',
     nome: 'Tomate-cereja',
     categoria: 'fruta',
+    // trocada a pedido do Paulo (2026-08-12): a original so mostrava fruto colhido, sem a planta
     imagemUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Tomates_cerises_Luc_Viatour.jpg/1280px-Tomates_cerises_Luc_Viatour.jpg',
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Cherry_Tomatoes_From_The_Garden_%28120856443%29.jpeg/1280px-Cherry_Tomatoes_From_The_Garden_%28120856443%29.jpeg',
     imagemJovemUrl:
       'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Person_plants_a_young_tomato_seedling_in_soil_on_a_sunny_day_in_a_garden_setting.jpg/1280px-Person_plants_a_young_tomato_seedling_in_soil_on_a_sunny_day_in_a_garden_setting.jpg',
     luzIdeal: 'sol_pleno',
@@ -55,7 +56,8 @@ export const ESPECIES_INICIAIS: Especie[] = [
     id: 'alfazema',
     nome: 'Alfazema',
     categoria: 'arbusto',
-    imagemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Single_lavender_flower02.jpg/1280px-Single_lavender_flower02.jpg',
+    // escolhida pelo Paulo (opcao 2) no levantamento de fotos de 2026-08-12
+    imagemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Lavender_Field_%2853073920873%29.jpg/1280px-Lavender_Field_%2853073920873%29.jpg',
     imagemJovemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Lavandula_angustifolia_prg_1.jpg/1280px-Lavandula_angustifolia_prg_1.jpg',
     luzIdeal: 'sol_pleno',
     regarCadaHoras: 72,
@@ -86,8 +88,8 @@ export const ESPECIES_INICIAIS: Especie[] = [
     id: 'petunia',
     nome: 'Petúnia',
     categoria: 'flor',
-    imagemUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Pet%C3%BAnia_%28do_tupi_petyma%2C_%27tabaco%27%29.jpg/1280px-Pet%C3%BAnia_%28do_tupi_petyma%2C_%27tabaco%27%29.jpg',
+    // escolhida pelo Paulo (opcao 3) no levantamento de fotos de 2026-08-12
+    imagemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Garden_Petunia_%28357116359%29.jpg/1280px-Garden_Petunia_%28357116359%29.jpg',
     imagemJovemUrl:
       'https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Petunia_ogrodowa_%28Petunia_%C3%97_atkinsiana%29%2C_Pozna%C5%84_-_kwiecie%C5%84_2015_%287%29.jpg/1280px-Petunia_ogrodowa_%28Petunia_%C3%97_atkinsiana%29%2C_Pozna%C5%84_-_kwiecie%C5%84_2015_%287%29.jpg',
     luzIdeal: 'sol_pleno',
@@ -150,7 +152,8 @@ export const ESPECIES_INICIAIS: Especie[] = [
     id: 'manjericao',
     nome: 'Manjericão',
     categoria: 'arbusto',
-    imagemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Ocimum_basilicum_8zz.jpg/1280px-Ocimum_basilicum_8zz.jpg',
+    // escolhida pelo Paulo (opcao 2) no levantamento de fotos de 2026-08-12
+    imagemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Basil_plant_in_a_pot_01.jpg/1280px-Basil_plant_in_a_pot_01.jpg',
     imagemJovemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Young_basil_plant.JPG/1280px-Young_basil_plant.JPG',
     luzIdeal: 'sol_pleno',
     regarCadaHoras: 30,
