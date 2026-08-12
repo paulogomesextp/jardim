@@ -4,6 +4,11 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // permite aceder via URL do tunnel (cloudflared) para testar no telemovel --
+  // sem isto o Vite bloqueia por causa do Host header nao reconhecido
+  preview: {
+    allowedHosts: true,
+  },
   plugins: [
     react(),
     VitePWA({
