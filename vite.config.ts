@@ -36,7 +36,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,glb}'],
         // sem isto, uma nova versao instala mas so "assume o controlo"
         // depois de todas as abas/instalacoes antigas fecharem -- forcava
         // a fechar mesmo a app para ver qualquer alteracao nova
