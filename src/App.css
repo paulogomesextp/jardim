@@ -1,0 +1,12 @@
+button, select {
+  font: inherit;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #CBD5E1;
+  background: #F8FAFC;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #F1F5F9;
+}
