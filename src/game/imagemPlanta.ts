@@ -18,8 +18,10 @@ export const IMAGEM_SEDE =
  */
 export const IMAGENS_FASE_GENERICA: Record<'semente' | 'germinacao', string> = {
   semente: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Native_Plant_Nursery_%2853729725629%29.jpg/1280px-Native_Plant_Nursery_%2853729725629%29.jpg',
-  germinacao:
-    'https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Fleece_lined_greenhouse_potting_tray_and_seed_pots_-_Flickr_-_peganum.jpg/1280px-Fleece_lined_greenhouse_potting_tray_and_seed_pots_-_Flickr_-_peganum.jpg',
+  // a foto anterior (tenda de estufa com pano branco) foi trocada a pedido do
+  // Paulo (2026-08-12, "elimine esta imagem horrivel") -- reutiliza uma foto
+  // ja escolhida para "rebento" em vez de procurar uma nova
+  germinacao: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Sprouting_seeds.jpg/1280px-Sprouting_seeds.jpg',
 }
 
 /**
