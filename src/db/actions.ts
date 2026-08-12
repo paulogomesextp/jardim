@@ -37,16 +37,26 @@ export async function mudarPosicaoSol(id: number, posicao: NivelLuz) {
 
 const CUSTO_POR_CM_VASO = 2 // moedas por cm de aumento -- arbitrario, a rever
 
-/** Aumenta o vaso em 5cm, com custo em moeda (substitui o botao gratis de teste da v1). */
-export async function aumentarVasoComCusto(id: number): Promise<{ ok: true } | { ok: false; erro: string }> {
+/** Tamanhos de vaso oferecidos no transplante (cm de aumento face ao atual). */
+export const INCREMENTOS_VASO_CM = [5, 10, 15] as const
+
+export function custoTransplante(incrementoCm: number): number {
+  return incrementoCm * CUSTO_POR_CM_VASO
+}
+
+/** Transplanta para um vaso maior, com custo em moeda proporcional ao aumento escolhido. */
+export async function transplantarVaso(
+  id: number,
+  incrementoCm: number,
+): Promise<{ ok: true } | { ok: false; erro: string }> {
   const planta = await db.plantas.get(id)
   if (!planta) return { ok: false, erro: 'Planta nao encontrada' }
-  const custo = 5 * CUSTO_POR_CM_VASO
+  const custo = custoTransplante(incrementoCm)
   const jogador = await db.jogador.get(1)
   if (!jogador || jogador.moeda < custo) return { ok: false, erro: 'Moeda insuficiente' }
 
   await db.jogador.update(1, { moeda: jogador.moeda - custo })
-  await db.plantas.update(id, { tamanhoVasoAtual: planta.tamanhoVasoAtual + 5 })
+  await db.plantas.update(id, { tamanhoVasoAtual: planta.tamanhoVasoAtual + incrementoCm })
   return { ok: true }
 }
 

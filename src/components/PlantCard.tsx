@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import type { NivelLuz, PlantaPossuida } from '../db/schema'
 import { NOMES_PRAGA } from '../game/pragas'
+import { custoTransplante, INCREMENTOS_VASO_CM } from '../db/actions'
 
 const ROTULOS_LUZ: Record<NivelLuz, string> = {
   sol_pleno: 'Sol pleno',
@@ -21,13 +23,14 @@ interface Props {
   especieNome: string
   onRegar: () => void
   onMudarSol: (posicao: NivelLuz) => void
-  onAumentarVaso: () => void
+  onTransplantar: (incrementoCm: number) => void
   onTratarPraga: () => void
   onVender: () => void
 }
 
-export function PlantCard({ planta, especieNome, onRegar, onMudarSol, onAumentarVaso, onTratarPraga, onVender }: Props) {
+export function PlantCard({ planta, especieNome, onRegar, onMudarSol, onTransplantar, onTratarPraga, onVender }: Props) {
   const corSaude = planta.saude >= 70 ? '#166534' : planta.saude >= 40 ? '#9A3412' : '#991B1B'
+  const [incrementoEscolhido, setIncrementoEscolhido] = useState<number>(INCREMENTOS_VASO_CM[0])
 
   return (
     <div
@@ -78,7 +81,17 @@ export function PlantCard({ planta, especieNome, onRegar, onMudarSol, onAumentar
               </option>
             ))}
           </select>
-          <button onClick={onAumentarVaso}>🪴 +5cm vaso (10🪙)</button>
+          <select
+            value={incrementoEscolhido}
+            onChange={(e) => setIncrementoEscolhido(Number(e.target.value))}
+          >
+            {INCREMENTOS_VASO_CM.map((cm) => (
+              <option key={cm} value={cm}>
+                +{cm}cm ({custoTransplante(cm)}🪙)
+              </option>
+            ))}
+          </select>
+          <button onClick={() => onTransplantar(incrementoEscolhido)}>🪴 Transplantar</button>
           {planta.estado === 'praga' && <button onClick={onTratarPraga}>🧪 Tratar praga</button>}
           <button onClick={onVender}>💰 Vender</button>
         </div>

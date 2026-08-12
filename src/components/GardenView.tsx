@@ -2,7 +2,6 @@ import { useEffect, useState, useCallback } from 'react'
 import { db } from '../db/schema'
 import type { Especie, ItemLoja, Jogador, NivelLuz } from '../db/schema'
 import {
-  aumentarVasoComCusto,
   comprarEPlantarSemente,
   listarLoja,
   listarPlantasComEspecie,
@@ -11,6 +10,7 @@ import {
   plantarSemente,
   processarTodasAsPlantas,
   regarPlanta,
+  transplantarVaso,
   tratarPragaManual,
   venderPlanta,
   type PlantaComEspecie,
@@ -108,8 +108,8 @@ export function GardenView() {
                 await mudarPosicaoSol(planta.id!, posicao)
                 await recarregar()
               }}
-              onAumentarVaso={async () => {
-                const resultado = await aumentarVasoComCusto(planta.id!)
+              onTransplantar={async (incrementoCm: number) => {
+                const resultado = await transplantarVaso(planta.id!, incrementoCm)
                 if (!resultado.ok) avisar(resultado.erro)
                 await recarregar()
               }}
