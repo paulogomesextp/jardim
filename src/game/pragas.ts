@@ -3,9 +3,13 @@ import { horasDesdeUltimaRega } from './care'
 
 const ORDEM_LUZ = ['sombra', 'sombra_parcial', 'sol_parcial', 'sol_pleno'] as const
 
-// janela de graca depois de tratar uma praga antes de poder reaparecer --
-// valor arbitrario (6h), a rever com o Paulo junto com o resto do balanceamento
-const GRACA_PRAGA_HORAS = 6
+// diferenca entre tratamento manual (gratis) e remedio (pago) -- decisao
+// tomada sem confirmar com o Paulo, a rever: manual tem hipotese de falhar
+// e protege menos tempo; remedio e garantido e protege mais tempo, para a
+// loja de remedios ter uma razao real de existir face a tratar de gratis.
+export const CHANCE_SUCESSO_TRATAMENTO_MANUAL = 0.6
+export const GRACA_MANUAL_HORAS = 3
+export const GRACA_REMEDIO_HORAS = 12
 
 /**
  * Cada praga e consequencia de UM erro de cuidado especifico, nao de saude
@@ -19,12 +23,12 @@ const GRACA_PRAGA_HORAS = 6
  *    abaixo do minimo da fase atual
  * So pode existir uma praga de cada vez por planta (a primeira condicao
  * verdadeira, por esta ordem, e a que se aplica). Depois de tratada (manual
- * ou remedio), fica imune por GRACA_PRAGA_HORAS mesmo que a causa persista
- * -- sem isto, tratar nao tinha qualquer efeito visivel quando a causa
- * (ex: posicao de sol) nao muda ao mesmo tempo.
+ * ou remedio), fica imune ate `pragaImuneAte` mesmo que a causa persista --
+ * sem isto, tratar nao tinha qualquer efeito visivel quando a causa (ex:
+ * posicao de sol) nao muda ao mesmo tempo.
  */
 export function avaliarPraga(planta: PlantaPossuida, especie: Especie, agora: number): TipoPraga | null {
-  if (planta.pragaTratadaEm !== null && (agora - planta.pragaTratadaEm) / 3_600_000 < GRACA_PRAGA_HORAS) {
+  if (planta.pragaImuneAte !== null && agora < planta.pragaImuneAte) {
     return null
   }
 

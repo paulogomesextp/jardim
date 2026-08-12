@@ -1,5 +1,6 @@
 import { db, type ItemLoja, type NivelLuz, type PlantaPossuida } from './schema'
 import { processarAoAbrir } from '../game/growth'
+import { CHANCE_SUCESSO_TRATAMENTO_MANUAL, GRACA_MANUAL_HORAS, GRACA_REMEDIO_HORAS } from '../game/pragas'
 
 export async function plantarSemente(speciesId: string): Promise<number> {
   const agora = Date.now()
@@ -15,16 +16,26 @@ export async function plantarSemente(speciesId: string): Promise<number> {
     saude: 100,
     estado: 'saudavel',
     pragaAtual: null,
-    pragaTratadaEm: null,
+    pragaImuneAte: null,
     criadaEm: agora,
     ultimaAvaliacao: agora,
   }
   return db.plantas.add(nova) as Promise<number>
 }
 
-/** Remove a praga atual sem custo -- fica imune por umas horas (ver GRACA_PRAGA_HORAS em game/pragas.ts), depois volta se a causa persistir. */
-export async function tratarPragaManual(id: number) {
-  await db.plantas.update(id, { pragaAtual: null, pragaTratadaEm: Date.now() })
+/**
+ * Tenta tratar a praga a mao, de graca -- tem CHANCE_SUCESSO_TRATAMENTO_MANUAL
+ * de funcionar; se resultar, fica imune por GRACA_MANUAL_HORAS (curta). Se
+ * falhar, a praga mantem-se e nada muda -- para a loja de remedios ter
+ * uma razao real de existir (remedio e sempre garantido, ver
+ * comprarETratarComRemedio).
+ */
+export async function tratarPragaManual(id: number): Promise<{ ok: true; sucesso: boolean }> {
+  const sucesso = Math.random() < CHANCE_SUCESSO_TRATAMENTO_MANUAL
+  if (sucesso) {
+    await db.plantas.update(id, { pragaAtual: null, pragaImuneAte: Date.now() + GRACA_MANUAL_HORAS * 3_600_000 })
+  }
+  return { ok: true, sucesso }
 }
 
 export async function regarPlanta(id: number) {
@@ -113,7 +124,7 @@ export async function comprarETratarComRemedio(
   if (!jogador || jogador.moeda < item.preco) return { ok: false, erro: 'Moeda insuficiente' }
 
   await db.jogador.update(1, { moeda: jogador.moeda - item.preco })
-  await tratarPragaManual(plantaId)
+  await db.plantas.update(plantaId, { pragaAtual: null, pragaImuneAte: Date.now() + GRACA_REMEDIO_HORAS * 3_600_000 })
   return { ok: true }
 }
 

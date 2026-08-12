@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import type { NivelLuz, PlantaPossuida } from '../db/schema'
-import { NOMES_PRAGA } from '../game/pragas'
+import type { ItemLoja, NivelLuz, PlantaPossuida } from '../db/schema'
+import { CHANCE_SUCESSO_TRATAMENTO_MANUAL, NOMES_PRAGA } from '../game/pragas'
 import { custoTransplante, INCREMENTOS_VASO_CM } from '../db/actions'
 
 const ROTULOS_LUZ: Record<NivelLuz, string> = {
@@ -26,9 +26,21 @@ interface Props {
   onTransplantar: (incrementoCm: number) => void
   onTratarPraga: () => void
   onVender: () => void
+  remedioDisponivel?: ItemLoja
+  onComprarRemedio: (itemLojaId: number) => void
 }
 
-export function PlantCard({ planta, especieNome, onRegar, onMudarSol, onTransplantar, onTratarPraga, onVender }: Props) {
+export function PlantCard({
+  planta,
+  especieNome,
+  onRegar,
+  onMudarSol,
+  onTransplantar,
+  onTratarPraga,
+  onVender,
+  remedioDisponivel,
+  onComprarRemedio,
+}: Props) {
   const corSaude = planta.saude >= 70 ? '#166534' : planta.saude >= 40 ? '#9A3412' : '#991B1B'
   const [incrementoEscolhido, setIncrementoEscolhido] = useState<number>(INCREMENTOS_VASO_CM[0])
 
@@ -92,7 +104,16 @@ export function PlantCard({ planta, especieNome, onRegar, onMudarSol, onTranspla
             ))}
           </select>
           <button onClick={() => onTransplantar(incrementoEscolhido)}>🪴 Transplantar</button>
-          {planta.estado === 'praga' && <button onClick={onTratarPraga}>🧪 Tratar praga</button>}
+          {planta.estado === 'praga' && (
+            <button onClick={onTratarPraga}>
+              🧪 Tratar praga (grátis, {Math.round(CHANCE_SUCESSO_TRATAMENTO_MANUAL * 100)}% chance)
+            </button>
+          )}
+          {planta.estado === 'praga' && remedioDisponivel && (
+            <button onClick={() => onComprarRemedio(remedioDisponivel.id!)}>
+              💊 {remedioDisponivel.nome} — garantido ({remedioDisponivel.preco}🪙)
+            </button>
+          )}
           <button onClick={onVender}>💰 Vender</button>
         </div>
       )}

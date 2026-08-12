@@ -27,7 +27,7 @@ function planta(overrides: Partial<PlantaPossuida> = {}): PlantaPossuida {
     saude: 100,
     estado: 'saudavel',
     pragaAtual: null,
-    pragaTratadaEm: null,
+    pragaImuneAte: null,
     criadaEm: 0,
     ultimaAvaliacao: 0,
     ...overrides,

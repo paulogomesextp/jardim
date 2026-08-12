@@ -39,7 +39,7 @@ export interface PlantaPossuida {
   saude: number // 0-100
   estado: Estado
   pragaAtual: TipoPraga | null
-  pragaTratadaEm: number | null // epoch ms -- da uma janela de graca apos tratar antes de a praga poder reaparecer
+  pragaImuneAte: number | null // epoch ms -- ate quando a praga fica suprimida apos um tratamento (ver game/pragas.ts)
   criadaEm: number
   ultimaAvaliacao: number // epoch ms -- ultima vez que growth.ts calculou saude/fase, base do "catch-up"
 }

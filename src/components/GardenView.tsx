@@ -3,6 +3,7 @@ import { db } from '../db/schema'
 import type { Especie, ItemLoja, Jogador, NivelLuz } from '../db/schema'
 import {
   comprarEPlantarSemente,
+  comprarETratarComRemedio,
   listarLoja,
   listarPlantasComEspecie,
   mudarPosicaoSol,
@@ -20,7 +21,8 @@ import { PlantCard } from './PlantCard'
 export function GardenView() {
   const [plantas, setPlantas] = useState<PlantaComEspecie[]>([])
   const [especies, setEspecies] = useState<Especie[]>([])
-  const [loja, setLoja] = useState<ItemLoja[]>([])
+  const [sementes, setSementes] = useState<ItemLoja[]>([])
+  const [remedios, setRemedios] = useState<ItemLoja[]>([])
   const [jogador, setJogador] = useState<Jogador | undefined>(undefined)
   const [mensagem, setMensagem] = useState<string | null>(null)
 
@@ -32,7 +34,10 @@ export function GardenView() {
 
   useEffect(() => {
     db.especies.toArray().then(setEspecies)
-    listarLoja().then((itens) => setLoja(itens.filter((i) => i.tipo === 'semente')))
+    listarLoja().then((itens) => {
+      setSementes(itens.filter((i) => i.tipo === 'semente'))
+      setRemedios(itens.filter((i) => i.tipo === 'remedio'))
+    })
     recarregar()
 
     // reavalia sempre que a aba volta a ficar visivel -- e assim que o "catch-up" acontece
@@ -83,7 +88,7 @@ export function GardenView() {
       <div>
         <h2 style={{ fontSize: 16, marginBottom: 8 }}>Loja de sementes</h2>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {loja.map((item) => (
+          {sementes.map((item) => (
             <button key={item.id} onClick={() => comprarSemente(item.id!)}>
               🛒 {item.nome} — {item.preco}🪙
             </button>
@@ -114,7 +119,15 @@ export function GardenView() {
                 await recarregar()
               }}
               onTratarPraga={async () => {
-                await tratarPragaManual(planta.id!)
+                const resultado = await tratarPragaManual(planta.id!)
+                avisar(resultado.sucesso ? 'Tratamento resultou! 🌿' : 'O tratamento falhou desta vez -- tenta outra vez ou compra um remédio.')
+                await recarregar()
+              }}
+              remedioDisponivel={remedios.find((r) => r.pragaAlvo === planta.pragaAtual)}
+              onComprarRemedio={async (itemId: number) => {
+                const resultado = await comprarETratarComRemedio(itemId, planta.id!)
+                if (resultado.ok) avisar('Remédio aplicado, praga tratada garantidamente! 🧪')
+                else avisar(resultado.erro)
                 await recarregar()
               }}
               onVender={async () => {

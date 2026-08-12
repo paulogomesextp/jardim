@@ -27,7 +27,7 @@ function planta(overrides: Partial<PlantaPossuida> = {}): PlantaPossuida {
     saude: 100,
     estado: 'saudavel',
     pragaAtual: null,
-    pragaTratadaEm: null,
+    pragaImuneAte: null,
     criadaEm: 0,
     ultimaAvaliacao: 0,
     ...overrides,
@@ -61,18 +61,16 @@ describe('avaliarPraga', () => {
     expect(avaliarPraga(p, especie, 1 * HORA_MS)).toBeNull()
   })
 
-  it('fica imune durante a janela de graca mesmo que a causa continue verdadeira', () => {
-    // rega nunca corrigida (ultimaRega fica a 0) -- so a rega foi "tratada" a 49h
-    const tratadaEm = (especie.regarCadaHoras * 2 + 1) * HORA_MS // 49h, condicao de aranhico ja verdadeira
-    const p = planta({ ultimaRega: 0, pragaTratadaEm: tratadaEm })
-    const agora = tratadaEm + 3 * HORA_MS // 3h depois de tratar, dentro das 6h de graca
+  it('fica imune enquanto agora < pragaImuneAte, mesmo que a causa continue verdadeira', () => {
+    const p = planta({ ultimaRega: 0, pragaImuneAte: 100 * HORA_MS })
+    const agora = 99 * HORA_MS // antes do fim da imunidade
     expect(avaliarPraga(p, especie, agora)).toBeNull()
   })
 
-  it('volta a poder aparecer depois de a janela de graca passar, se a causa persistir', () => {
-    const tratadaEm = (especie.regarCadaHoras * 2 + 1) * HORA_MS
-    const p = planta({ ultimaRega: 0, pragaTratadaEm: tratadaEm })
-    const agora = tratadaEm + 7 * HORA_MS // depois das 6h de graca
+  it('volta a poder aparecer depois de pragaImuneAte passar, se a causa persistir', () => {
+    const p = planta({ ultimaRega: 0, pragaImuneAte: 10 * HORA_MS })
+    // depois do fim da imunidade (10h) E depois do limiar do aranhico (>48h sem rega)
+    const agora = especie.regarCadaHoras * 2 * HORA_MS + HORA_MS
     expect(avaliarPraga(p, especie, agora)).toBe('aranhico')
   })
 })
