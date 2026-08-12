@@ -3,7 +3,11 @@ import Dexie, { type EntityTable } from 'dexie'
 export type Categoria = 'fruta' | 'flor' | 'arbusto' | 'vaso'
 export type NivelLuz = 'sol_pleno' | 'sol_parcial' | 'sombra_parcial' | 'sombra'
 export type Fase = 'semente' | 'germinacao' | 'rebento' | 'jovem' | 'adulta'
-export type Estado = 'saudavel' | 'stress' | 'morta'
+export type Estado = 'saudavel' | 'stress' | 'praga' | 'morta'
+
+// cada praga esta ligada a UM tipo de negligencia especifico (ver game/pragas.ts)
+// -- decisao provisoria a rever com o Paulo: mapeamento real pode mudar.
+export type TipoPraga = 'aranhico' | 'oidio' | 'pulgao'
 
 // ordem das fases -- indice usado para saber "a fase seguinte"
 export const ORDEM_FASES: Fase[] = ['semente', 'germinacao', 'rebento', 'jovem', 'adulta']
@@ -34,6 +38,8 @@ export interface PlantaPossuida {
   tamanhoVasoAtual: number // cm
   saude: number // 0-100
   estado: Estado
+  pragaAtual: TipoPraga | null
+  pragaTratadaEm: number | null // epoch ms -- da uma janela de graca apos tratar antes de a praga poder reaparecer
   criadaEm: number
   ultimaAvaliacao: number // epoch ms -- ultima vez que growth.ts calculou saude/fase, base do "catch-up"
 }
@@ -47,6 +53,7 @@ export interface ItemLoja {
   id?: number
   tipo: 'semente' | 'remedio'
   speciesId?: string // presente quando tipo === 'semente'
+  pragaAlvo?: TipoPraga // presente quando tipo === 'remedio'
   nome: string
   preco: number
 }

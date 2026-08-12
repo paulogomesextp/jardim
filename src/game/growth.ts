@@ -1,10 +1,12 @@
-import type { Especie, Estado, Fase, PlantaPossuida } from '../db/schema'
+import type { Especie, Estado, Fase, PlantaPossuida, TipoPraga } from '../db/schema'
 import { ORDEM_FASES } from '../db/schema'
 import { HORA_MS, taxaSaudeTotal } from './care'
+import { avaliarPraga, taxaPraga } from './pragas'
 
 export interface ResultadoProcessamento {
   saude: number
   estado: Estado
+  pragaAtual: TipoPraga | null
   fase: Fase
   dataInicioFase: number
   ultimaAvaliacao: number
@@ -38,6 +40,7 @@ export function processarAoAbrir(
     return {
       saude: planta.saude,
       estado: 'morta',
+      pragaAtual: planta.pragaAtual,
       fase: planta.fase,
       dataInicioFase: planta.dataInicioFase,
       ultimaAvaliacao: agora,
@@ -45,10 +48,12 @@ export function processarAoAbrir(
     }
   }
 
+  const pragaAtual = avaliarPraga(planta, especie, agora)
   const horasDecorridas = Math.max(0, (agora - planta.ultimaAvaliacao) / HORA_MS)
-  const taxa = taxaSaudeTotal(planta, especie, agora)
+  const taxa = taxaSaudeTotal(planta, especie, agora) + taxaPraga(pragaAtual)
   const novaSaude = clamp(planta.saude + taxa * horasDecorridas, 0, 100)
-  const novoEstado: Estado = novaSaude <= 0 ? 'morta' : novaSaude < 50 ? 'stress' : 'saudavel'
+  const novoEstado: Estado =
+    novaSaude <= 0 ? 'morta' : pragaAtual ? 'praga' : novaSaude < 50 ? 'stress' : 'saudavel'
 
   let fase = planta.fase
   let dataInicioFase = planta.dataInicioFase
@@ -71,6 +76,7 @@ export function processarAoAbrir(
   return {
     saude: novaSaude,
     estado: novoEstado,
+    pragaAtual: novoEstado === 'morta' ? planta.pragaAtual : pragaAtual,
     fase,
     dataInicioFase,
     ultimaAvaliacao: agora,
