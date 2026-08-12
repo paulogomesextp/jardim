@@ -1,13 +1,13 @@
 import type { Especie } from './schema'
 
 /**
- * Dados iniciais de 4 especies reais (uma amostra das 4 categorias:
- * fruta, arbusto, vaso -- falta ainda flor). Valores de luz/agua/humidade
- * baseados em necessidades reais de cada planta; as duracoes de fase
- * estao COMPRIMIDAS para horas de jogo (nao sao o tempo real que uma
- * planta demora), so a duracao RELATIVA entre especies tenta refletir
- * a realidade (ex: suculenta e alfazema crescem mais devagar e toleram
- * muito mais tempo sem rega do que morangueiro/tomateiro).
+ * Catalogo inicial: 8 especies reais, 2 por categoria (fruta, flor,
+ * arbusto, vaso). Valores de luz/agua/humidade baseados em necessidades
+ * reais de cada planta; as duracoes de fase estao COMPRIMIDAS para horas
+ * de jogo (nao sao o tempo real que uma planta demora), so a duracao
+ * RELATIVA entre especies tenta refletir a realidade (ex: cacto e alecrim
+ * crescem mais devagar e toleram muito mais tempo sem rega que petunia/
+ * tomateiro).
  */
 export const ESPECIES_INICIAIS: Especie[] = [
   {
@@ -57,5 +57,53 @@ export const ESPECIES_INICIAIS: Especie[] = [
     duracaoFasesHoras: { germinacao: 12, rebento: 24, jovem: 36, adulta: 72 },
     tamanhoVasoMinimoPorFase: { germinacao: 6, rebento: 8, jovem: 10, adulta: 12 },
     valorVendaBase: 20,
+  },
+  {
+    id: 'petunia',
+    nome: 'Petúnia',
+    categoria: 'flor',
+    luzIdeal: 'sol_pleno',
+    regarCadaHoras: 36,
+    humidadeIdealMin: 55,
+    humidadeIdealMax: 65,
+    duracaoFasesHoras: { germinacao: 6, rebento: 12, jovem: 18, adulta: 36 },
+    tamanhoVasoMinimoPorFase: { germinacao: 6, rebento: 8, jovem: 12, adulta: 16 },
+    valorVendaBase: 15,
+  },
+  {
+    id: 'calendula',
+    nome: 'Calêndula',
+    categoria: 'flor',
+    luzIdeal: 'sol_pleno',
+    regarCadaHoras: 48,
+    humidadeIdealMin: 45,
+    humidadeIdealMax: 55,
+    duracaoFasesHoras: { germinacao: 7, rebento: 14, jovem: 20, adulta: 38 },
+    tamanhoVasoMinimoPorFase: { germinacao: 6, rebento: 8, jovem: 12, adulta: 15 },
+    valorVendaBase: 15,
+  },
+  {
+    id: 'alecrim',
+    nome: 'Alecrim',
+    categoria: 'arbusto',
+    luzIdeal: 'sol_pleno',
+    regarCadaHoras: 120,
+    humidadeIdealMin: 20,
+    humidadeIdealMax: 30,
+    duracaoFasesHoras: { germinacao: 12, rebento: 24, jovem: 36, adulta: 72 },
+    tamanhoVasoMinimoPorFase: { germinacao: 8, rebento: 10, jovem: 15, adulta: 20 },
+    valorVendaBase: 30,
+  },
+  {
+    id: 'cacto',
+    nome: 'Cacto (Mammillaria)',
+    categoria: 'vaso',
+    luzIdeal: 'sol_pleno',
+    regarCadaHoras: 168,
+    humidadeIdealMin: 10,
+    humidadeIdealMax: 20,
+    duracaoFasesHoras: { germinacao: 16, rebento: 30, jovem: 45, adulta: 90 },
+    tamanhoVasoMinimoPorFase: { germinacao: 5, rebento: 7, jovem: 9, adulta: 11 },
+    valorVendaBase: 22,
   },
 ]
