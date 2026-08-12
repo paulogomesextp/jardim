@@ -13,7 +13,7 @@ function App() {
   if (!pronto) return <p style={{ padding: 24 }}>A carregar o jardim...</p>
 
   return (
-    <main className="app-shell">
+    <main className="app-shell-3d">
       <GardenView />
     </main>
   )

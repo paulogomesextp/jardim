@@ -145,86 +145,6 @@ select {
   font-size: 13px;
 }
 
-/* ---------- secao do jardim / carrossel ---------- */
-
-.secao--jardim {
-  padding: 18px 0 20px;
-  overflow: hidden;
-}
-
-.secao--jardim > .secao__titulo {
-  padding: 0 18px;
-}
-
-.carrossel {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.carrossel__janela {
-  overflow: hidden;
-}
-
-.carrossel__pista {
-  display: flex;
-  touch-action: pan-y;
-  cursor: grab;
-}
-
-.carrossel__pista:active {
-  cursor: grabbing;
-}
-
-.carrossel__slide {
-  flex: 0 0 100%;
-  min-width: 0;
-  padding: 0 18px;
-  display: flex;
-  justify-content: center;
-}
-
-.carrossel__nav {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-}
-
-.carrossel__seta {
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  line-height: 1;
-  border-radius: 999px;
-  background: var(--superficie);
-}
-
-.carrossel__pontos {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.carrossel__ponto {
-  width: 7px;
-  height: 7px;
-  padding: 0;
-  border: none;
-  border-radius: 999px;
-  background: var(--cinza-300);
-  transition: background 0.2s, width 0.2s;
-}
-
-.carrossel__ponto--ativo {
-  background: var(--primaria);
-  width: 20px;
-}
-
 /* ---------- vista da planta (uma de cada vez) ---------- */
 
 .planta-stage {
@@ -567,4 +487,126 @@ select {
 
 .barra-saude--pulso {
   animation: pulso-saude 0.65s ease-out;
+}
+
+/* ---------- jardim 3D: canvas em ecra inteiro + overlays HTML ---------- */
+
+.app-shell-3d {
+  height: 100dvh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.jardim-3d-shell {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+.jardim-canvas {
+  position: absolute;
+  inset: 0;
+  outline: none;
+  touch-action: none;
+}
+
+.hud {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  pointer-events: none;
+}
+
+.hud__topo {
+  pointer-events: auto;
+  background: rgba(251, 246, 234, 0.92);
+  backdrop-filter: blur(4px);
+  border-radius: var(--raio);
+  padding: 10px 14px;
+  box-shadow: var(--sombra);
+}
+
+.hud__toast {
+  pointer-events: auto;
+  align-self: flex-start;
+}
+
+/* ---------- bottom sheets (acoes da planta / loja) sobre o canvas 3D ---------- */
+
+.plant-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 82dvh;
+  overflow-y: auto;
+  background: var(--superficie);
+  border-top: 1px solid var(--borda);
+  border-radius: 20px 20px 0 0;
+  box-shadow: var(--sombra-hover);
+  padding: 14px 14px calc(14px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: subir-sheet 0.22s ease-out;
+}
+
+.plant-sheet--loja {
+  gap: 14px;
+  align-items: stretch;
+}
+
+.plant-sheet__fechar {
+  align-self: flex-end;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 999px;
+  font-size: 18px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes subir-sheet {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ---------- joystick virtual (so em ecra tatil) ---------- */
+
+.joystick-base {
+  position: absolute;
+  left: 24px;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  width: 92px;
+  height: 92px;
+  border-radius: 999px;
+  background: rgba(31, 61, 44, 0.14);
+  border: 1px solid rgba(31, 61, 44, 0.22);
+  touch-action: none;
+  z-index: 3;
+}
+
+.joystick-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  margin-left: -22px;
+  margin-top: -22px;
+  border-radius: 999px;
+  background: rgba(31, 61, 44, 0.55);
+  pointer-events: none;
 }
