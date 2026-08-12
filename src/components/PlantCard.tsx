@@ -1,4 +1,5 @@
 import type { NivelLuz, PlantaPossuida } from '../db/schema'
+import { NOMES_PRAGA } from '../game/pragas'
 
 const ROTULOS_LUZ: Record<NivelLuz, string> = {
   sol_pleno: 'Sol pleno',
@@ -21,9 +22,11 @@ interface Props {
   onRegar: () => void
   onMudarSol: (posicao: NivelLuz) => void
   onAumentarVaso: () => void
+  onTratarPraga: () => void
+  onVender: () => void
 }
 
-export function PlantCard({ planta, especieNome, onRegar, onMudarSol, onAumentarVaso }: Props) {
+export function PlantCard({ planta, especieNome, onRegar, onMudarSol, onAumentarVaso, onTratarPraga, onVender }: Props) {
   const corSaude = planta.saude >= 70 ? '#166534' : planta.saude >= 40 ? '#9A3412' : '#991B1B'
 
   return (
@@ -43,6 +46,7 @@ export function PlantCard({ planta, especieNome, onRegar, onMudarSol, onAumentar
       <strong>{planta.nomeCustom || especieNome}</strong>
       <span style={{ fontSize: 13, color: '#334155' }}>
         Fase: {ROTULOS_FASE[planta.fase]} {planta.estado === 'morta' ? '· Morta 💀' : ''}
+        {planta.estado === 'praga' && planta.pragaAtual ? ` · 🐛 ${NOMES_PRAGA[planta.pragaAtual]}` : ''}
       </span>
 
       <div style={{ background: '#F1F5F9', borderRadius: 6, overflow: 'hidden', height: 10 }}>
@@ -74,7 +78,9 @@ export function PlantCard({ planta, especieNome, onRegar, onMudarSol, onAumentar
               </option>
             ))}
           </select>
-          <button onClick={onAumentarVaso}>🪴 +5cm vaso</button>
+          <button onClick={onAumentarVaso}>🪴 +5cm vaso (10🪙)</button>
+          {planta.estado === 'praga' && <button onClick={onTratarPraga}>🧪 Tratar praga</button>}
+          <button onClick={onVender}>💰 Vender</button>
         </div>
       )}
     </div>

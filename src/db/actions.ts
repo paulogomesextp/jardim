@@ -35,11 +35,23 @@ export async function mudarPosicaoSol(id: number, posicao: NivelLuz) {
   await db.plantas.update(id, { posicaoSol: posicao })
 }
 
-/** Botao simples de teste para a v1 -- o fluxo de transplante a serio fica para uma fase seguinte. */
-export async function aumentarVaso(id: number) {
+const CUSTO_POR_CM_VASO = 2 // moedas por cm de aumento -- arbitrario, a rever
+
+/** Aumenta o vaso em 5cm, com custo em moeda (substitui o botao gratis de teste da v1). */
+export async function aumentarVasoComCusto(id: number): Promise<{ ok: true } | { ok: false; erro: string }> {
   const planta = await db.plantas.get(id)
-  if (!planta) return
+  if (!planta) return { ok: false, erro: 'Planta nao encontrada' }
+  const custo = 5 * CUSTO_POR_CM_VASO
+  const jogador = await db.jogador.get(1)
+  if (!jogador || jogador.moeda < custo) return { ok: false, erro: 'Moeda insuficiente' }
+
+  await db.jogador.update(1, { moeda: jogador.moeda - custo })
   await db.plantas.update(id, { tamanhoVasoAtual: planta.tamanhoVasoAtual + 5 })
+  return { ok: true }
+}
+
+export async function obterJogador() {
+  return db.jogador.get(1)
 }
 
 /** Corre o motor de crescimento sobre todas as plantas vivas e grava o resultado -- chamar sempre que a app abre/volta a primeiro plano. */
