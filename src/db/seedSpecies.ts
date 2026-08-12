@@ -26,7 +26,7 @@ export const ESPECIES_INICIAIS: Especie[] = [
     categoria: 'fruta',
     imagemUrl:
       'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Garden_strawberry_%28Fragaria_%C3%97_ananassa%29_single2.jpg/330px-Garden_strawberry_%28Fragaria_%C3%97_ananassa%29_single2.jpg',
-    imagemJovemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Leaf_of_Strawberry_plant.jpg/400px-Leaf_of_Strawberry_plant.jpg',
+    imagemJovemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Leaf_of_Strawberry_plant.jpg/500px-Leaf_of_Strawberry_plant.jpg',
     luzIdeal: 'sol_pleno',
     regarCadaHoras: 48,
     humidadeIdealMin: 60,
@@ -42,7 +42,7 @@ export const ESPECIES_INICIAIS: Especie[] = [
     imagemUrl:
       'https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Tomates_cerises_Luc_Viatour.jpg/330px-Tomates_cerises_Luc_Viatour.jpg',
     imagemJovemUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Person_plants_a_young_tomato_seedling_in_soil_on_a_sunny_day_in_a_garden_setting.jpg/400px-Person_plants_a_young_tomato_seedling_in_soil_on_a_sunny_day_in_a_garden_setting.jpg',
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Person_plants_a_young_tomato_seedling_in_soil_on_a_sunny_day_in_a_garden_setting.jpg/500px-Person_plants_a_young_tomato_seedling_in_soil_on_a_sunny_day_in_a_garden_setting.jpg',
     luzIdeal: 'sol_pleno',
     regarCadaHoras: 24,
     humidadeIdealMin: 50,
@@ -56,7 +56,7 @@ export const ESPECIES_INICIAIS: Especie[] = [
     nome: 'Alfazema',
     categoria: 'arbusto',
     imagemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Single_lavender_flower02.jpg/330px-Single_lavender_flower02.jpg',
-    imagemJovemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Lavandula_angustifolia_prg_1.jpg/400px-Lavandula_angustifolia_prg_1.jpg',
+    imagemJovemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Lavandula_angustifolia_prg_1.jpg/500px-Lavandula_angustifolia_prg_1.jpg',
     luzIdeal: 'sol_pleno',
     regarCadaHoras: 72,
     humidadeIdealMin: 30,
@@ -71,7 +71,7 @@ export const ESPECIES_INICIAIS: Especie[] = [
     categoria: 'vaso',
     imagemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Echeveria_elegans_-_1.jpg/330px-Echeveria_elegans_-_1.jpg',
     imagemJovemUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Rosa_de_alabastro_%28Echeveria_elegans%29%2C_jard%C3%ADn_del_molino%2C_Sierra_de_San_Felipe%2C_Set%C3%BAbal%2C_Portugal%2C_2012-05-11%2C_DD_01.JPG/400px-Rosa_de_alabastro_%28Echeveria_elegans%29%2C_jard%C3%ADn_del_molino%2C_Sierra_de_San_Felipe%2C_Set%C3%BAbal%2C_Portugal%2C_2012-05-11%2C_DD_01.JPG',
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Rosa_de_alabastro_%28Echeveria_elegans%29%2C_jard%C3%ADn_del_molino%2C_Sierra_de_San_Felipe%2C_Set%C3%BAbal%2C_Portugal%2C_2012-05-11%2C_DD_01.JPG/500px-Rosa_de_alabastro_%28Echeveria_elegans%29%2C_jard%C3%ADn_del_molino%2C_Sierra_de_San_Felipe%2C_Set%C3%BAbal%2C_Portugal%2C_2012-05-11%2C_DD_01.JPG',
     luzIdeal: 'sol_parcial',
     regarCadaHoras: 96,
     humidadeIdealMin: 20,
@@ -87,7 +87,7 @@ export const ESPECIES_INICIAIS: Especie[] = [
     imagemUrl:
       'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Pet%C3%BAnia_%28do_tupi_petyma%2C_%27tabaco%27%29.jpg/330px-Pet%C3%BAnia_%28do_tupi_petyma%2C_%27tabaco%27%29.jpg',
     imagemJovemUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Petunia_ogrodowa_%28Petunia_%C3%97_atkinsiana%29%2C_Pozna%C5%84_-_kwiecie%C5%84_2015_%287%29.jpg/400px-Petunia_ogrodowa_%28Petunia_%C3%97_atkinsiana%29%2C_Pozna%C5%84_-_kwiecie%C5%84_2015_%287%29.jpg',
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Petunia_ogrodowa_%28Petunia_%C3%97_atkinsiana%29%2C_Pozna%C5%84_-_kwiecie%C5%84_2015_%287%29.jpg/500px-Petunia_ogrodowa_%28Petunia_%C3%97_atkinsiana%29%2C_Pozna%C5%84_-_kwiecie%C5%84_2015_%287%29.jpg',
     luzIdeal: 'sol_pleno',
     regarCadaHoras: 36,
     humidadeIdealMin: 55,
@@ -101,7 +101,7 @@ export const ESPECIES_INICIAIS: Especie[] = [
     nome: 'Calêndula',
     categoria: 'flor',
     imagemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Calendula_January_2008-1_filtered.jpg/330px-Calendula_January_2008-1_filtered.jpg',
-    imagemJovemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Calendula_officinalis_0zz.jpg/400px-Calendula_officinalis_0zz.jpg',
+    imagemJovemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Calendula_officinalis_0zz.jpg/500px-Calendula_officinalis_0zz.jpg',
     luzIdeal: 'sol_pleno',
     regarCadaHoras: 48,
     humidadeIdealMin: 45,
@@ -118,7 +118,7 @@ export const ESPECIES_INICIAIS: Especie[] = [
     // sem foto fiavel de "alecrim jovem" encontrada no Wikimedia -- usa o
     // generico de rebento (ver IMAGENS_FASE_GENERICA) tambem na fase jovem
     imagemJovemUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Plant_Nursery_Seedling%21_%2855027505770%29.jpg/400px-Plant_Nursery_Seedling%21_%2855027505770%29.jpg',
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Plant_Nursery_Seedling%21_%2855027505770%29.jpg/500px-Plant_Nursery_Seedling%21_%2855027505770%29.jpg',
     luzIdeal: 'sol_pleno',
     regarCadaHoras: 120,
     humidadeIdealMin: 20,
@@ -132,7 +132,7 @@ export const ESPECIES_INICIAIS: Especie[] = [
     nome: 'Cacto (Mammillaria)',
     categoria: 'vaso',
     imagemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Mammillaria_tayloriorum.jpg/330px-Mammillaria_tayloriorum.jpg',
-    imagemJovemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Thimble_cactus.jpg/400px-Thimble_cactus.jpg',
+    imagemJovemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Thimble_cactus.jpg/500px-Thimble_cactus.jpg',
     luzIdeal: 'sol_pleno',
     regarCadaHoras: 168,
     humidadeIdealMin: 10,
@@ -148,7 +148,7 @@ export const ESPECIES_INICIAIS: Especie[] = [
     nome: 'Manjericão',
     categoria: 'arbusto',
     imagemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Ocimum_basilicum_8zz.jpg/330px-Ocimum_basilicum_8zz.jpg',
-    imagemJovemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Young_basil_plant.JPG/400px-Young_basil_plant.JPG',
+    imagemJovemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Young_basil_plant.JPG/500px-Young_basil_plant.JPG',
     luzIdeal: 'sol_pleno',
     regarCadaHoras: 30,
     humidadeIdealMin: 55,
@@ -162,7 +162,7 @@ export const ESPECIES_INICIAIS: Especie[] = [
     nome: 'Girassol',
     categoria: 'flor',
     imagemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Sunflower_sky_backdrop.jpg/330px-Sunflower_sky_backdrop.jpg',
-    imagemJovemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/ISS-38_Young_sunflower_plant.jpg/400px-ISS-38_Young_sunflower_plant.jpg',
+    imagemJovemUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/ISS-38_Young_sunflower_plant.jpg/500px-ISS-38_Young_sunflower_plant.jpg',
     luzIdeal: 'sol_pleno',
     regarCadaHoras: 36,
     humidadeIdealMin: 50,

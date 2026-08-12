@@ -20,10 +20,10 @@ export const IMAGEM_SEDE =
  * comentario em seedSpecies.ts).
  */
 export const IMAGENS_FASE_GENERICA: Record<'semente' | 'germinacao' | 'rebento', string> = {
-  semente: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Native_Plant_Nursery_%2853729725629%29.jpg/400px-Native_Plant_Nursery_%2853729725629%29.jpg',
+  semente: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Native_Plant_Nursery_%2853729725629%29.jpg/500px-Native_Plant_Nursery_%2853729725629%29.jpg',
   germinacao:
-    'https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Fleece_lined_greenhouse_potting_tray_and_seed_pots_-_Flickr_-_peganum.jpg/400px-Fleece_lined_greenhouse_potting_tray_and_seed_pots_-_Flickr_-_peganum.jpg',
-  rebento: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Plant_Nursery_Seedling%21_%2855027505770%29.jpg/400px-Plant_Nursery_Seedling%21_%2855027505770%29.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Fleece_lined_greenhouse_potting_tray_and_seed_pots_-_Flickr_-_peganum.jpg/500px-Fleece_lined_greenhouse_potting_tray_and_seed_pots_-_Flickr_-_peganum.jpg',
+  rebento: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Plant_Nursery_Seedling%21_%2855027505770%29.jpg/500px-Plant_Nursery_Seedling%21_%2855027505770%29.jpg',
 }
 
 export interface ImagemPlantaInfo {
