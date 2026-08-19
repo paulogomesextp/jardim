@@ -881,11 +881,15 @@ select {
 }
 
 /* ---------- nivel do jardim (XP, ref. FarmVille) ---------- */
+/* barra maior/mais visivel + celebracao ao subir de nivel -- pedido do
+   Paulo (2026-08-19) para "ir vendo a barra crescer ate passar para o
+   proximo [nivel]", nao so um numero a mudar sem feedback nenhum. */
 
 .nivel-badge {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   margin-top: 1px;
 }
 
@@ -896,11 +900,13 @@ select {
   color: #fff5e2;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
   white-space: nowrap;
+  transition: transform 0.2s ease-out;
 }
 
 .nivel-badge__barra {
-  width: 46px;
-  height: 6px;
+  position: relative;
+  width: 68px;
+  height: 9px;
   border-radius: 999px;
   background: rgba(0, 0, 0, 0.28);
   border: 1px solid rgba(0, 0, 0, 0.3);
@@ -909,9 +915,72 @@ select {
 }
 
 .nivel-badge__preenchimento {
+  position: relative;
   height: 100%;
   background: linear-gradient(180deg, var(--lima) 0%, #8fbf3a 100%);
-  transition: width 0.3s ease-out;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  /* width sobe suavemente a cada XP ganho -- é o "crescer" que o Paulo pediu para ver */
+  transition: width 0.4s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+/* brilho a percorrer o preenchimento, continuo -- torna a barra "viva" mesmo parada, não só no instante em que cresce */
+.nivel-badge__preenchimento::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.55) 50%, transparent 80%);
+  background-size: 200% 100%;
+  animation: nivel-brilho-percorrer 2.2s linear infinite;
+}
+@keyframes nivel-brilho-percorrer {
+  0% {
+    background-position: 160% 0;
+  }
+  100% {
+    background-position: -60% 0;
+  }
+}
+
+/* ---------- celebracao "subiu de nivel" ---------- */
+
+.nivel-badge--subiu .nivel-badge__rotulo {
+  animation: nivel-rotulo-pulso 0.5s ease-out;
+}
+@keyframes nivel-rotulo-pulso {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.35);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.nivel-badge--subiu .nivel-badge__barra {
+  animation: nivel-barra-flash 0.6s ease-out;
+}
+@keyframes nivel-barra-flash {
+  0% {
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(185, 224, 90, 0.9);
+  }
+  60% {
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.3), 0 0 8px 4px rgba(185, 224, 90, 0.7);
+  }
+  100% {
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(185, 224, 90, 0);
+  }
+}
+
+.nivel-badge__rebentar {
+  position: absolute;
+  left: 50%;
+  top: -2px;
+  font-size: 20px;
+  pointer-events: none;
+  animation: flutuar-subir 1.1s ease-out forwards;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
 }
 
 /* ---------- botao icone (avisos, no topo) ---------- */

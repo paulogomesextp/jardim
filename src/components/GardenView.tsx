@@ -62,6 +62,8 @@ export function GardenView() {
   const jaNotificados = useRef<Set<string>>(new Set())
   const [moedaPop, setMoedaPop] = useState(false)
   const moedaAnterior = useRef<number | undefined>(undefined)
+  const [nivelSubiu, setNivelSubiu] = useState(false)
+  const xpAnterior = useRef<number | undefined>(undefined)
 
   const recarregar = useCallback(async () => {
     await processarTodasAsPlantas()
@@ -124,6 +126,26 @@ export function GardenView() {
       return () => clearTimeout(t)
     }
     moedaAnterior.current = jogador.moeda
+  }, [jogador])
+
+  // "subiu de nivel" -- compara o nivel derivado do xp anterior com o atual (nao so o xp em
+  // si, ja que varios ganhos pequenos de XP podem nunca cruzar uma fronteira de nivel) para
+  // disparar a celebracao (barra a brilhar + toast) exatamente no momento em que passa para
+  // o proximo nivel, pedido explicito do Paulo ("ir vendo a barra crescer ate passar").
+  useEffect(() => {
+    if (jogador === undefined) return
+    if (xpAnterior.current !== undefined) {
+      const nivelAntes = calcularNivel(xpAnterior.current).nivel
+      const nivelDepois = calcularNivel(jogador.xp).nivel
+      if (nivelDepois > nivelAntes) {
+        setNivelSubiu(true)
+        avisar(`Subiste para o Nível ${nivelDepois}! 🎉`)
+        const t = setTimeout(() => setNivelSubiu(false), 1100)
+        xpAnterior.current = jogador.xp
+        return () => clearTimeout(t)
+      }
+    }
+    xpAnterior.current = jogador.xp
   }, [jogador])
 
   function avisar(texto: string) {
@@ -235,7 +257,10 @@ export function GardenView() {
             <Folha tamanho={34} />
             <div className="marca__texto">
               <h1>Between Leaves</h1>
-              <div className="nivel-badge" title={`${infoNivel.progresso}/${XP_POR_NIVEL} XP para o nível ${infoNivel.nivel + 1}`}>
+              <div
+                className={`nivel-badge ${nivelSubiu ? 'nivel-badge--subiu' : ''}`}
+                title={`${infoNivel.progresso}/${XP_POR_NIVEL} XP para o nível ${infoNivel.nivel + 1}`}
+              >
                 <span className="nivel-badge__rotulo">Nível {infoNivel.nivel}</span>
                 <span className="nivel-badge__barra">
                   <span
@@ -243,6 +268,11 @@ export function GardenView() {
                     style={{ width: `${(infoNivel.progresso / XP_POR_NIVEL) * 100}%` }}
                   />
                 </span>
+                {nivelSubiu && (
+                  <span className="nivel-badge__rebentar" aria-hidden="true">
+                    ✨
+                  </span>
+                )}
               </div>
             </div>
           </div>
