@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { useGLTF, Text, Outlines } from '@react-three/drei'
+import { useGLTF, Text } from '@react-three/drei'
 import type { Fase } from '../db/schema'
 import { desmetalizar } from './materialFix'
 import { usePotClayMaterial } from './potMaterial'
@@ -17,18 +17,6 @@ const FASE_ESCALA: Record<Fase, number> = {
 // mesmo yaw fixo da IsoCamera -- nunca precisa de <Billboard> dinamico
 // porque a camara nunca roda, uma unica orientacao serve sempre
 const ROTACAO_FIXA = new THREE.Euler(0, Math.PI / 4, 0)
-
-// contorno escuro em cada submesh (vaso e planta) -- a marca visual mais
-// reconhecivel do FarmVille ("contornos a definir os objetos"). Usa o
-// <Outlines> do drei (tecnica de casco invertido, ja incluido na
-// dependencia @react-three/drei, sem shader novo escrito a mao): cria a
-// sua propria mesh extra a partir da geometria do pai, nao mexe no
-// material/geometria original -- aditivo, nao pode partir o que ja
-// renderiza. thickness e em pixels de ecra (modo screenspace=false),
-// nao em unidades de mundo, por isso fica igual em todas as fases apesar
-// da escala variar.
-const COR_CONTORNO = '#1f3d2c' // verde-900 da paleta, em vez de preto puro
-const ESPESSURA_CONTORNO = 2.5
 
 // vaso pequeno e estreito (semente/germinacao/rebento) vs largo (jovem/adulta,
 // depois do "transplante" que ja existe no jogo) -- 2 modelos reais da Kenney
@@ -83,16 +71,12 @@ export function Plant3D({ x, z, fase, speciesId, nome, corEstado, onClick }: Pro
     <group position={[x, 0, z]} onClick={onClick}>
       <group scale={escalaVaso}>
         {submeshesVaso.map((m, i) => (
-          <mesh key={i} geometry={m.geometry} material={materialVaso} castShadow receiveShadow>
-            <Outlines thickness={ESPESSURA_CONTORNO} color={COR_CONTORNO} />
-          </mesh>
+          <mesh key={i} geometry={m.geometry} material={materialVaso} castShadow receiveShadow />
         ))}
       </group>
       <group position={[0, alturaVaso, 0]} scale={escalaPlanta}>
         {submeshesPlanta.map((m, i) => (
-          <mesh key={i} geometry={m.geometry} material={m.material} castShadow>
-            <Outlines thickness={ESPESSURA_CONTORNO} color={COR_CONTORNO} />
-          </mesh>
+          <mesh key={i} geometry={m.geometry} material={m.material} castShadow />
         ))}
       </group>
       <Text

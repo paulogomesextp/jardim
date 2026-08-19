@@ -29,12 +29,8 @@ function ConteudoCena({ plantas, onSelecionarPlanta }: Props) {
 
   return (
     <>
-      {/* iluminacao "plana" estilo FarmVille -- mais luz ambiente/hemisferica
-          e menos peso na direcional, para sombras suaves em vez de duras
-          (mesmo PCFSoft de sempre, so menos contraste entre luz e sombra) */}
-      <ambientLight intensity={0.55} />
-      <hemisphereLight args={['#fdf3dd', '#8fae5c', 0.55]} />
-      <directionalLight position={[8, 12, 6]} intensity={0.85} castShadow />
+      <ambientLight intensity={0.7} />
+      <directionalLight position={[8, 12, 6]} intensity={1.1} castShadow />
       <IsoCamera target={avatarRef} />
       <Ground largura={largaoChao} profundidade={profundidadeChao} />
       <Avatar ref={avatarRef} limites={limites} />
@@ -65,14 +61,7 @@ function ConteudoCena({ plantas, onSelecionarPlanta }: Props) {
 /** Canvas R3F a preencher o ecra -- ver src/components/GardenView.tsx para o HUD/paineis 2D sobrepostos. */
 export function Scene(props: Props) {
   return (
-    <Canvas
-      className="jardim-canvas"
-      shadows
-      camera={{ position: [14, 14, 14] }}
-      onCreated={(state) => {
-        if (import.meta.env.DEV) (window as unknown as { __r3f?: unknown }).__r3f = state
-      }}
-    >
+    <Canvas className="jardim-canvas" shadows camera={{ position: [14, 14, 14] }}>
       <ConteudoCena {...props} />
     </Canvas>
   )

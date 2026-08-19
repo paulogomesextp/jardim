@@ -10,9 +10,7 @@ import * as THREE from 'three'
  */
 const BASE = `${import.meta.env.BASE_URL}textures/clay/`
 
-// color multiplica a textura de barro real -- leve tint quente/saturado
-// (em vez de 0xffffff neutro) para um terracota mais vivo, missao FarmVille
-const material = new THREE.MeshStandardMaterial({ color: 0xffdcb0, roughness: 1 })
+const material = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1 })
 let carregado = false
 const ouvintes = new Set<() => void>()
 
