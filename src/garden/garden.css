@@ -848,11 +848,15 @@
    logica extra de sincronizacao. */
 
 .balao-raiz {
+  /* posicao (translate) calculada em JS a cada frame, ja em espaco de ecra e
+     ja dentro dos limites da viewport -- ver PlantSpeechMenu.tsx. Por isso
+     este componente vive FORA de `.mundo` (nao herda a transformacao da
+     camara) e o offset para cima do vaso ja vem embutido no calculo, sem
+     precisar de margin-top aqui. */
   position: absolute;
   left: 0;
   top: 0;
   z-index: 999;
-  margin-top: -58px;
   pointer-events: none;
 }
 

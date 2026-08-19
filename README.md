@@ -418,12 +418,12 @@ sentido, talvez sem eliminar os vasos, vale a pena reler antes de recomeçar.
 5. **[Sessão 2026-08-19 tarde]** Preço dos vasos (10-22🪙, arbitrário, ver
    `game/vasoVisual.ts`) e o preço/passo de encolher vaso (`-10cm`/`-5cm`,
    mesmo custo por cm que crescer) -- valores todos arbitrários, a rever.
-6. **[Sessão 2026-08-19 tarde]** Confirma no telemóvel real que o balão de
-   fala não fica cortado nas margens do ecrã em vasos perto da borda da
-   grelha, e que o "pop" de entrada dos 100+ vasos ao carregar a app não
-   fica visualmente poluído/lento num telemóvel mais fraco -- nenhum dos
-   dois foi possível confirmar sem screenshot real (ver "Como foi
-   verificado" acima).
+6. ~~Confirma no telemóvel real que o balão de fala não fica cortado nas
+   margens do ecrã~~ -- corrigido e testado ao vivo na sessão seguinte
+   (ver "Balão de fala nunca sai do ecrã" abaixo). Falta só confirmar que
+   o "pop" de entrada dos 100+ vasos ao carregar a app não fica
+   visualmente poluído/lento num telemóvel mais fraco -- isso continua
+   por confirmar sem screenshot real.
 7. **[Sessão 2026-08-19 noite]** A pergunta mais importante em aberto:
    quando dizes que o jogo "reseta ao entrar", **sempre abres o mesmo
    link** `https://paulogomesextp.github.io/jardim/`, ou às vezes um link
@@ -432,3 +432,36 @@ sentido, talvez sem eliminar os vasos, vale a pena reler antes de recomeçar.
    tutorial..." acima) -- se o link for sempre o mesmo e continuar a
    perder progresso depois disto, há mesmo algo por caçar que eu não
    encontrei só por revisão de código.
+
+## Balão de fala nunca sai do ecrã (2026-08-19, noite, mesma sessão)
+
+Fechado o item 6 da lista de questões em aberto acima. O balão passou a
+viver FORA de `.mundo` (`garden/PlantSpeechMenu.tsx`, renderizado por
+`GardenScene.tsx` como irmão, não filho, de `.mundo`) e a calcular a sua
+própria posição em espaço de ecrã real (mesma fórmula da câmara,
+`mundoParaEcra`/`avatarPos`), agarrada (`Math.min`/`Math.max`) dentro da
+viewport com uma margem de 10px -- antes disto, herdava a transformação
+da câmara como qualquer vaso, e uma planta perto do bordo da grelha podia
+projetar o balão para fora do ecrã visível.
+
+**Lição de debugging real desta sessão, vale a pena lembrar**: a primeira
+versão calculava a posição SÓ dentro de um `requestAnimationFrame` --
+igual ao padrão já usado pela câmara/avatar. Isso pareceu fazer sentido
+(mesmo padrão que já funcionava), mas escondia um problema: o
+`Avatar.tsx` já calcula uma posição *inicial* síncrona (`mundoParaEcra`
+direto no JSX, `const inicial = ...`) além de atualizar via rAF depois --
+eu copiei só a parte do rAF, sem a parte síncrona. Resultado: o balão só
+ficava posicionado corretamente depois do primeiro frame de rAF pintar,
+e nesta sessão (aba sem foco genuíno) o rAF fica **totalmente suspenso**,
+por isso o balão nunca saía de `translate()` vazio nos meus testes --
+parecia um bug de posicionamento, mas era só a falta da parte síncrona.
+Corrigido extraindo o cálculo para `calcularTransform()` (função pura,
+sem `requestAnimationFrame` nenhum) usada tanto no `style` inicial do
+JSX como dentro do loop de rAF que o mantém atualizado se o avatar se
+mover com o balão aberto -- consistente com o padrão que o `Avatar.tsx`
+já usava, só que desta vez percebido a tempo de aplicar aqui também.
+Testado ao vivo (evento de clique real + leitura da posição logo a
+seguir, sem depender de nenhum frame de rAF): balão nasce já na posição
+certa e agarrado dentro do ecrã (testado com um vaso perto do bordo
+esquerdo -- a borda direita do balão ficou a 373.7px de um ecrã de
+375px, dentro da margem).

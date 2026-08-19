@@ -53,6 +53,11 @@ export function GardenScene({ plantas, vasos, selecionadaId, onSelecionarPlanta,
   const vasosPorSlot = useMemo(() => new Map(vasos.map((v) => [v.slotIndex, v])), [vasos])
   const plantasPorId = useMemo(() => new Map(plantas.map((p) => [p.planta.id!, p])), [plantas])
 
+  // planta selecionada -- usado so para posicionar o balao de fala fora de `.mundo` (ver JSX)
+  const vasoSelecionado = selecionadaId !== null ? vasos.find((v) => v.plantaId === selecionadaId) : undefined
+  const slotSelecionado = vasoSelecionado ? slots.find((s) => s.index === vasoSelecionado.slotIndex) : undefined
+  const itemSelecionado = selecionadaId !== null ? plantasPorId.get(selecionadaId) : undefined
+
   // teclado (WASD/setas) -- liga uma unica vez, o joystick ja escreve diretamente em inputVector
   useEffect(() => ligarInputTeclado(), [])
 
@@ -167,43 +172,47 @@ export function GardenScene({ plantas, vasos, selecionadaId, onSelecionarPlanta,
           const estaSelecionada = item ? selecionadaId === item.planta.id : false
 
           return (
-            <div key={`slot-${slot.index}`}>
-              <PlantSprite
-                x={slot.x}
-                z={slot.z}
-                tipoVaso={vaso.tipo}
-                corVaso={vaso.cor}
-                fase={item ? item.planta.fase : null}
-                nome={item ? item.planta.nomeCustom || item.especieNome : 'Vaso vazio'}
-                folha={forma.folha}
-                fruto={forma.fruto}
-                corFruto={forma.corAcento}
-                corEstado={item ? corEstadoVisual(item.planta, item.especie, agora) : '#8a8071'}
-                emblema={item ? emblemaEstado(item.planta, item.especie, agora) : null}
-                morta={item?.planta.estado === 'morta'}
-                selecionada={estaSelecionada}
-                perto={perto}
-                onClick={() => (item ? onSelecionarPlanta(item.planta.id!) : onAbrirVasoVazio(vaso.id!))}
-              />
-              {estaSelecionada && item && (
-                <PlantSpeechMenu
-                  x={slot.x}
-                  z={slot.z}
-                  item={item}
-                  onRegar={() => acoes.onRegar(item.planta.id!)}
-                  onCiclarSol={() => acoes.onCiclarSol(item.planta.id!)}
-                  onTratarPraga={() => acoes.onTratarPraga(item.planta.id!)}
-                  onVender={() => acoes.onVender(item.planta.id!)}
-                  onAbrirDetalhes={() => acoes.onAbrirDetalhes(item.planta.id!)}
-                  onFechar={() => onSelecionarPlanta(null)}
-                />
-              )}
-            </div>
+            <PlantSprite
+              key={`vaso-${vaso.id}`}
+              x={slot.x}
+              z={slot.z}
+              tipoVaso={vaso.tipo}
+              corVaso={vaso.cor}
+              fase={item ? item.planta.fase : null}
+              nome={item ? item.planta.nomeCustom || item.especieNome : 'Vaso vazio'}
+              folha={forma.folha}
+              fruto={forma.fruto}
+              corFruto={forma.corAcento}
+              corEstado={item ? corEstadoVisual(item.planta, item.especie, agora) : '#8a8071'}
+              emblema={item ? emblemaEstado(item.planta, item.especie, agora) : null}
+              morta={item?.planta.estado === 'morta'}
+              selecionada={estaSelecionada}
+              perto={perto}
+              onClick={() => (item ? onSelecionarPlanta(item.planta.id!) : onAbrirVasoVazio(vaso.id!))}
+            />
           )
         })}
 
         <Avatar limites={limites} />
       </div>
+
+      {/* fora de `.mundo` de proposito -- posiciona-se sozinho em espaco de ecra real
+          (ver PlantSpeechMenu.tsx), para se poder manter dentro do ecra em vez de herdar
+          a transformacao da camara e poder sair cortado perto do bordo da grelha
+          (ver README "Balao de fala nunca sai do ecra", 2026-08-19). */}
+      {slotSelecionado && itemSelecionado && (
+        <PlantSpeechMenu
+          x={slotSelecionado.x}
+          z={slotSelecionado.z}
+          item={itemSelecionado}
+          onRegar={() => acoes.onRegar(itemSelecionado.planta.id!)}
+          onCiclarSol={() => acoes.onCiclarSol(itemSelecionado.planta.id!)}
+          onTratarPraga={() => acoes.onTratarPraga(itemSelecionado.planta.id!)}
+          onVender={() => acoes.onVender(itemSelecionado.planta.id!)}
+          onAbrirDetalhes={() => acoes.onAbrirDetalhes(itemSelecionado.planta.id!)}
+          onFechar={() => onSelecionarPlanta(null)}
+        />
+      )}
     </div>
   )
 }
