@@ -75,7 +75,9 @@ export function Ground({ largura, profundidade }: Props) {
   return (
     <mesh ref={planoRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} onClick={aoClicar} receiveShadow>
       <planeGeometry args={[largura, profundidade]} />
-      <meshStandardMaterial ref={materialRef} color="#c7de7c" />
+      {/* color multiplica a textura PBR -- puxa a relva para um verde mais
+          vivo/saturado (missao FarmVille), mantendo o normal/roughness map real */}
+      <meshStandardMaterial ref={materialRef} color="#b9e05a" />
     </mesh>
   )
 }
