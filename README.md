@@ -103,6 +103,34 @@ espaço/zonas ao jardim voltar a fazer sentido, talvez sem eliminar os
 vasos (ex: zonas do jardim com plantas em vaso à mesma, só organizadas por
 área), vale a pena reler antes de recomeçar do zero.
 
+### Manhã 2026-08-19: revertidos os contornos/luz/tons da cena 3D
+
+O Paulo reportou tela em branco no telemóvel (só o header aparecia, nada
+do jardim/avatar). Investiguei ao vivo (real Chrome ligado via
+claude-in-chrome, não só o browser autónomo) e confirmei, de forma
+repetida, que o `<canvas>` da cena nunca saía do tamanho por omissão do
+HTML (300x150, sem `style` de largura/altura aplicado) -- ou seja, o R3F
+nunca completa um resize+render real, o que bate certo com "ecrã em
+branco" (o canvas fica microscópico/nunca ganha conteúdo visível).
+**Não consegui isolar com 100% de certeza se a causa é o commit "Cena 3D:
+contornos, luz mais plana e cores mais saturadas" (o próprio Tom já tinha
+avisado que não o verificou ao vivo) ou o mesmo problema de ambiente
+"aba sem foco" que já persegue este projeto** -- o sintoma reproduziu-se
+mesmo em testes que deviam estar com foco real, mas o Chrome automatizado
+também nunca ficou de forma fiável em primeiro plano genuíno durante os
+testes, e um pedido de acesso ao ecrã real para confirmar visualmente foi
+negado (não havia ninguém a aprovar o diálogo).
+
+Decisão: **revertido o commit `25ea647`** (`git revert`, commit `8e2df10`),
+já com push e deploy confirmado. Isto devolve a cena 3D à última
+configuração de luz/materiais **já validada ao vivo em sessões
+anteriores** (12-08), removendo a única variável não verificada, sem
+perder nada do resto da sessão de ontem (UI chunky, os 2 fixes de
+flex-shrink, o bounce da loja). Os contornos/luz mais plana/tons mais
+saturados ficam por refazer, desta vez com verificação visual real (no
+telemóvel do Paulo ou com alguém a olhar para o browser automatizado) em
+vez de só revisão de código.
+
 ### Questões em aberto para o Paulo (e a Sara, onde marcado)
 
 1. **[Sara]** Subi ligeiramente a saturação dos tons de destaque da paleta
@@ -118,13 +146,9 @@ vasos (ex: zonas do jardim com plantas em vaso à mesma, só organizadas por
    conceito de vasos -- se a intenção original era outra coisa (ex: só dar
    mais espaço visual ao jardim, sem tirar os vasos), diz para eu perceber
    melhor antes de decidir sozinho da próxima vez.
-4. **Não consegui verificar visualmente** (screenshot) as alterações na
-   cena 3D desta sessão (contornos, luzes, tons de vaso/relva) -- o browser
-   automatizado desta sessão autónoma não composita frames sem um humano
-   a ver (confirmado: `requestAnimationFrame` nunca dispara numa aba em
-   segundo plano/oculta, o que também impede o Canvas R3F de sequer
-   inicializar o loop de render). Toda a verificação foi por leitura de
-   código + `tsc`/testes/build limpos + as técnicas usadas são aditivas e
-   de baixo risco (ver commit "Cena 3D: contornos..."), mas por favor dá
-   uma olhada real a isto em primeiro lugar amanhã -- é a única parte do
-   trabalho de hoje que não pude confirmar com os meus próprios olhos.
+4. ~~Não consegui verificar visualmente as alterações na cena 3D~~ --
+   confirmado que era um problema real (ecrã em branco no telemóvel do
+   Paulo), commit revertido na manhã de 19-08 (ver secção acima). Por
+   favor confirma que o link ao vivo já mostra o jardim/avatar
+   normalmente outra vez. Contornos/luz plana/tons saturados ficam por
+   refazer com verificação visual real da próxima vez.
