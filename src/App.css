@@ -186,6 +186,14 @@ select {
 .planta-stage {
   width: 100%;
   max-width: 420px;
+  /* flex-shrink:0 -- e filho direto do .plant-sheet (flex column, scroll
+     proprio via overflow-y:auto). Sem isto, um cartao com muito conteudo
+     (nome longo + badges + temporizadores + menu de acoes completo) que
+     ultrapasse o max-height do sheet era espremido pelo flexbox em vez de
+     simplesmente causar scroll -- esmagava a .planta-stage__imagem-wrap de
+     280px para uma fatia minuscula. Mesma familia de bug do
+     .plant-sheet__fechar (ver commit anterior), apanhada com o mesmo teste. */
+  flex-shrink: 0;
   background: var(--superficie);
   border: 1px solid var(--borda);
   border-radius: var(--raio);
