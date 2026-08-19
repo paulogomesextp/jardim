@@ -21,7 +21,10 @@ export async function inicializarDb() {
 
   const jogador = await db.jogador.get(1)
   if (!jogador) {
-    await db.jogador.add({ id: 1, moeda: 50 })
+    // put (nao add) -- em StrictMode o efeito que chama inicializarDb corre 2x em
+    // sequencia rapida; get(1) pode ver "nada" nas duas antes de qualquer escrita
+    // terminar, e um segundo add() com a mesma chave fixa rebentava com ConstraintError
+    await db.jogador.put({ id: 1, moeda: 50 })
   }
 
   await semearJardimDemo()

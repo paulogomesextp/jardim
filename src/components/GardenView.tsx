@@ -42,6 +42,8 @@ export function GardenView() {
     podeNotificar() ? Notification.permission : 'indisponivel',
   )
   const jaNotificados = useRef<Set<string>>(new Set())
+  const [moedaPop, setMoedaPop] = useState(false)
+  const moedaAnterior = useRef<number | undefined>(undefined)
 
   const recarregar = useCallback(async () => {
     await processarTodasAsPlantas()
@@ -94,6 +96,20 @@ export function GardenView() {
     }
   }, [recarregar])
 
+  // "moeda pop" -- bounce curto na pill de moedas sempre que o saldo sobe (venda de
+  // planta), estilo feedback de jogo mobile; ignora a 1a leitura (moedaAnterior ainda
+  // undefined) para nao disparar so por a app ter acabado de carregar
+  useEffect(() => {
+    if (jogador === undefined) return
+    if (moedaAnterior.current !== undefined && jogador.moeda > moedaAnterior.current) {
+      setMoedaPop(true)
+      const t = setTimeout(() => setMoedaPop(false), 450)
+      moedaAnterior.current = jogador.moeda
+      return () => clearTimeout(t)
+    }
+    moedaAnterior.current = jogador.moeda
+  }, [jogador])
+
   function avisar(texto: string) {
     setMensagem(texto)
     setTimeout(() => setMensagem((atual) => (atual === texto ? null : atual)), 4000)
@@ -145,7 +161,7 @@ export function GardenView() {
             <button className="chip" onClick={() => setLojaAberta(true)}>
               🛒 Loja
             </button>
-            <span className="coin-pill">🪙 {jogador?.moeda ?? 0}</span>
+            <span className={`coin-pill ${moedaPop ? 'coin-pill--pop' : ''}`}>🪙 {jogador?.moeda ?? 0}</span>
           </div>
         </div>
 

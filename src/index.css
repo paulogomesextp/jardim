@@ -1,22 +1,27 @@
 :root {
   /* paleta "Between Leaves" -- tirada das artes da namorada do Paulo
-     (creme quente, verde-escuro, verde-lima, lavanda, laranja, teal) */
+     (creme quente, verde-escuro, verde-lima, lavanda, laranja, teal).
+     Os tons de destaque (--lima/--laranja/--agua/--teal/--ouro) tem a
+     saturacao ligeiramente puxada para cima nesta sessao, dentro da
+     mesma familia de cor, como parte da missao de aproximar o visual
+     do FarmVille -- decisao minha (Tom), a rever com a Sara; as cores
+     "-suave" (fundos) e a base creme/verde ficaram tal e qual estavam. */
   --creme: #f7eedd;
   --creme-clara: #fbf6ea;
   --verde-900: #1f3d2c;
   --verde-700: #2c5741;
   --verde-500: #3f7a5b;
-  --lima: #c7de7c;
+  --lima: #b9e05a;
   --lima-suave: #e8f0cd;
   --lavanda: #c6baea;
   --lavanda-suave: #ece6f8;
-  --laranja: #e2692f;
+  --laranja: #e85a1f;
   --laranja-suave: #f8ddc8;
-  --teal: #1e7f72;
+  --teal: #0e8a7a;
   --teal-suave: #d2ece7;
-  --agua: #2f8fd1;
+  --agua: #1f93e0;
   --agua-suave: #d7ebf9;
-  --ouro: #c98a13;
+  --ouro: #d99400;
   --ouro-suave: #f5e6bd;
 
   --cinza-700: #6b6152;
@@ -41,7 +46,7 @@
 
   --sombra: 0 1px 2px rgba(45, 33, 15, 0.07), 0 1px 3px rgba(45, 33, 15, 0.09);
   --sombra-hover: 0 8px 20px rgba(45, 33, 15, 0.12), 0 2px 6px rgba(45, 33, 15, 0.08);
-  --raio: 18px;
+  --raio: 20px;
 
   --serif: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
   --sans: 'Segoe UI', system-ui, Roboto, sans-serif;
