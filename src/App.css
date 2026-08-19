@@ -184,19 +184,25 @@ select {
   flex-wrap: wrap;
 }
 
+/* "pacote de semente" -- cartao em vez de pill, com friso colorido no topo
+   (ref. FarmVille: itens da loja parecem embalagens/cartas, nao botoes
+   genericos) -- reformulacao FarmVille 2026-08-19. */
 .chip {
-  background: var(--lima-suave);
+  border-radius: 14px;
+  background: linear-gradient(180deg, var(--lima) 0 4px, var(--lima-suave) 4px 100%);
   color: var(--primaria-escura);
   font-weight: 700;
-  box-shadow: 0 3px 0 var(--lima), var(--sombra);
+  border: 2px solid var(--lima);
+  box-shadow: 0 4px 0 #8fbf3a, var(--sombra);
+  padding: 10px 14px;
 }
 
 .chip:hover {
-  background: var(--lima);
+  background: linear-gradient(180deg, var(--lima) 0 4px, #dcecb8 4px 100%);
 }
 
 .chip:active {
-  box-shadow: 0 0 0 var(--lima), var(--sombra);
+  box-shadow: 0 0 0 #8fbf3a, var(--sombra);
 }
 
 @keyframes chip-pop {
@@ -745,7 +751,7 @@ select {
   color: #7a3312;
 }
 
-/* ---------- bottom sheets (acoes da planta / loja) sobre o canvas 3D ---------- */
+/* ---------- bottom sheets (acoes da planta / loja) sobre a cena do jardim ---------- */
 
 .plant-sheet {
   position: absolute;
@@ -755,7 +761,9 @@ select {
   max-height: 82dvh;
   overflow-y: auto;
   background: var(--superficie);
-  border-top: 1px solid var(--borda);
+  /* friso de madeira no topo do sheet, ecoa a moldura do HUD (ref. FarmVille:
+     paineis emergentes tambem tem a mesma moldura da UI principal) */
+  border-top: 5px solid var(--madeira);
   border-radius: 20px 20px 0 0;
   box-shadow: var(--sombra-hover);
   padding: 14px 14px calc(14px + env(safe-area-inset-bottom));
