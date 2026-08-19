@@ -229,6 +229,68 @@ select {
   font-size: 13px;
 }
 
+/* ---------- seletores "colocar vaso" / "plantar semente" ---------- */
+/* mesmo friso de madeira dos outros bottom sheets (plant-sheet), so um
+   layout mais simples -- sem seccoes com fundo proprio, so titulo + grupos. */
+
+.plant-sheet--picker {
+  gap: 12px;
+  align-items: stretch;
+}
+
+.picker__grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.picker__rotulo {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--texto-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.chip--vaso.chip--ativo {
+  background: linear-gradient(180deg, var(--agua) 0 4px, var(--agua-suave) 4px 100%);
+  border-color: var(--agua);
+  box-shadow: 0 4px 0 #1c5a86, var(--sombra);
+}
+
+.amostra-cor {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 999px;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 2px var(--borda), var(--sombra);
+}
+
+.amostra-cor--ativa {
+  box-shadow: 0 0 0 2px var(--primaria-escura), var(--sombra-hover);
+  transform: scale(1.08);
+}
+
+.amostra-cor--mini {
+  width: 22px;
+  height: 22px;
+  border-width: 2px;
+}
+
+.acoes-linha--cores {
+  align-items: center;
+}
+
+.botao-confirmar {
+  align-self: center;
+  background: linear-gradient(180deg, #fff7e6 0%, var(--ouro-suave) 55%, #f0d488 100%);
+  border: 2px solid var(--madeira-escura);
+  box-shadow: 0 4px 0 var(--madeira-escura), var(--sombra);
+  color: #7a3312;
+  padding: 11px 22px;
+}
+
 /* ---------- vista da planta (uma de cada vez) ---------- */
 
 .planta-stage {
@@ -585,9 +647,17 @@ select {
 /* `jardim-canvas`/R3F removidos na reformulacao FarmVille 2026-08-19 -- o
    mundo agora vive em garden/garden.css (`.jardim-mundo-camada`/`.mundo`). */
 
+/* mapa em ecra inteiro (ver README "Mapa em ecra inteiro", 2026-08-19) --
+   100dvh/100dvw acompanham a barra de endereco do browser movel a
+   aparecer/desaparecer sem deixar tiras de fundo visiveis; 100vh/100vw como
+   fallback para browsers sem suporte a unidades dinamicas. */
 .app-shell-jardim {
-  height: 100dvh;
+  position: fixed;
+  inset: 0;
+  height: 100vh;
   width: 100vw;
+  height: 100dvh;
+  width: 100dvw;
   overflow: hidden;
 }
 
@@ -595,6 +665,7 @@ select {
   position: relative;
   height: 100%;
   width: 100%;
+  overflow: hidden;
 }
 
 .hud {

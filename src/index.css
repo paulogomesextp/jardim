@@ -87,9 +87,18 @@
   box-sizing: border-box;
 }
 
+/* html/body/#root a 100% de altura real -- necessario para o jardim (`.app-shell-jardim`,
+   App.css) conseguir preencher o ecra inteiro no telemovel em vez de ficar cortado por um
+   ancestral sem altura definida (ver README "Mapa em ecra inteiro", 2026-08-19). */
+html, body, #root {
+  height: 100%;
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   background: var(--fundo);
+  overscroll-behavior: none;
 }
 
 h1, h2, h3 {

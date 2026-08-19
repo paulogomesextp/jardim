@@ -1,88 +1,63 @@
 import { describe, expect, it } from 'vitest'
-import type { PlantaComEspecie } from '../db/actions'
-import type { Fase, PlantaPossuida } from '../db/schema'
-import { calcularLocalizacoes, limitesJardim } from './layout'
+import { gerarSlots, limitesJardim, slotsMinimosPara } from './layout'
 
-function planta(id: number, fase: Fase): PlantaComEspecie {
-  const p: PlantaPossuida = {
-    id,
-    speciesId: 'teste',
-    fase,
-    dataInicioFase: 0,
-    ultimaRega: 0,
-    posicaoSol: 'sol_pleno',
-    tamanhoVasoAtual: 10,
-    saude: 100,
-    estado: 'saudavel',
-    pragaAtual: null,
-    pragaImuneAte: null,
-    criadaEm: 0,
-    ultimaAvaliacao: 0,
-  }
-  return { planta: p, especieNome: 'Teste', especie: undefined }
-}
-
-function distancia(a: { x: number; z: number }, b: { x: number; z: number }): number {
-  return Math.hypot(a.x - b.x, a.z - b.z)
-}
-
-describe('calcularLocalizacoes', () => {
+describe('gerarSlots', () => {
   it('e deterministico -- mesma entrada produz sempre a mesma saida', () => {
-    const plantas = [planta(3, 'jovem'), planta(1, 'rebento'), planta(2, 'adulta'), planta(5, 'semente')]
-    const a = calcularLocalizacoes(plantas)
-    const b = calcularLocalizacoes(plantas)
-    expect(a).toEqual(b)
+    expect(gerarSlots(64)).toEqual(gerarSlots(64))
   })
 
-  it('agrupa por fase nos 2 canteiros corretos', () => {
-    const plantas = [planta(1, 'semente'), planta(2, 'germinacao'), planta(3, 'rebento'), planta(4, 'jovem'), planta(5, 'adulta')]
-    const localizacoes = calcularLocalizacoes(plantas)
-    const porId = new Map(localizacoes.map((l) => [l.id, l]))
-    expect(porId.get(1)!.bed).toBe('rebentos')
-    expect(porId.get(2)!.bed).toBe('rebentos')
-    expect(porId.get(3)!.bed).toBe('rebentos')
-    expect(porId.get(4)!.bed).toBe('crescimento')
-    expect(porId.get(5)!.bed).toBe('crescimento')
+  it('devolve pelo menos os slots minimos, sem duplicados de indice', () => {
+    const slots = gerarSlots()
+    expect(slots.length).toBeGreaterThanOrEqual(64)
+    expect(new Set(slots.map((s) => s.index)).size).toBe(slots.length)
   })
 
-  it('nao sobrepoe plantas -- distancia minima razoavel entre quaisquer duas', () => {
-    const plantas = Array.from({ length: 50 }, (_, i) => planta(i + 1, i % 2 === 0 ? 'jovem' : 'rebento'))
-    const localizacoes = calcularLocalizacoes(plantas)
+  it('indices sao sequenciais a partir de 0', () => {
+    const slots = gerarSlots()
+    slots.forEach((s, i) => expect(s.index).toBe(i))
+  })
+
+  it('cresce para cobrir um minimo pedido maior que a grelha base', () => {
+    const slots = gerarSlots(200)
+    expect(slots.length).toBeGreaterThanOrEqual(200)
+  })
+
+  it('nenhuma parcela se sobrepoe -- distancia minima igual ao espacamento da grelha', () => {
+    const slots = gerarSlots(64)
     let minDist = Infinity
-    for (let i = 0; i < localizacoes.length; i++) {
-      for (let j = i + 1; j < localizacoes.length; j++) {
-        minDist = Math.min(minDist, distancia(localizacoes[i], localizacoes[j]))
+    for (let i = 0; i < slots.length; i++) {
+      for (let j = i + 1; j < slots.length; j++) {
+        const d = Math.hypot(slots[i].x - slots[j].x, slots[i].z - slots[j].z)
+        minDist = Math.min(minDist, d)
       }
     }
-    expect(minDist).toBeGreaterThan(1.0)
+    expect(minDist).toBeGreaterThan(2.0)
+  })
+})
+
+describe('slotsMinimosPara', () => {
+  it('nunca desce abaixo do minimo base', () => {
+    expect(slotsMinimosPara(0)).toBeGreaterThanOrEqual(64)
   })
 
-  it('devolve uma localizacao por planta, sem duplicados nem perdas', () => {
-    const plantas = Array.from({ length: 50 }, (_, i) => planta(i + 1, i % 3 === 0 ? 'rebento' : 'adulta'))
-    const localizacoes = calcularLocalizacoes(plantas)
-    expect(localizacoes).toHaveLength(50)
-    expect(new Set(localizacoes.map((l) => l.id)).size).toBe(50)
-  })
-
-  it('lida com lista vazia sem rebentar', () => {
-    expect(calcularLocalizacoes([])).toEqual([])
+  it('cobre o maior indice ja usado', () => {
+    expect(slotsMinimosPara(199)).toBeGreaterThanOrEqual(200)
   })
 })
 
 describe('limitesJardim', () => {
-  it('envolve todas as posicoes com a margem pedida', () => {
-    const plantas = [planta(1, 'rebento'), planta(2, 'adulta')]
-    const localizacoes = calcularLocalizacoes(plantas)
-    const limites = limitesJardim(localizacoes, 3)
-    for (const l of localizacoes) {
-      expect(l.x).toBeGreaterThanOrEqual(limites.minX)
-      expect(l.x).toBeLessThanOrEqual(limites.maxX)
-      expect(l.z).toBeGreaterThanOrEqual(limites.minZ)
-      expect(l.z).toBeLessThanOrEqual(limites.maxZ)
+  it('envolve todas as parcelas com a margem pedida', () => {
+    const slots = gerarSlots(64)
+    const limites = limitesJardim(slots, 3)
+    for (const s of slots) {
+      expect(s.x).toBeGreaterThanOrEqual(limites.minX)
+      expect(s.x).toBeLessThanOrEqual(limites.maxX)
+      expect(s.z).toBeGreaterThanOrEqual(limites.minZ)
+      expect(s.z).toBeLessThanOrEqual(limites.maxZ)
     }
   })
 
-  it('devolve um retangulo minimo mesmo sem plantas', () => {
+  it('devolve um retangulo minimo mesmo sem parcelas', () => {
     const limites = limitesJardim([], 3)
     expect(limites).toEqual({ minX: -3, maxX: 3, minZ: -3, maxZ: 3 })
   })

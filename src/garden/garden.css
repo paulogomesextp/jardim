@@ -305,6 +305,130 @@
   border-bottom: 2px solid #b9861f;
 }
 
+/* ---------- animacoes de acao do avatar (regar/tratar/vender/plantar) ---------- */
+/* disparadas pelo balao de fala (PlantSpeechMenu.tsx) via `dispararAcaoAvatar`
+   (garden/movement.ts) -- o boneco "representa" a acao escolhida em vez de a
+   UI so mudar dados por baixo, pedido explicito do Paulo. */
+
+.avatar--acao-regar .avatar__braco--frente {
+  transform: rotate(-55deg);
+  transform-origin: top center;
+  transition: transform 0.15s ease-out;
+}
+
+.avatar__regador {
+  position: absolute;
+  top: 10px;
+  left: 6px;
+  width: 14px;
+  height: 9px;
+  border-radius: 3px 6px 6px 2px;
+  background: linear-gradient(180deg, #b7c4cc 0%, #8a99a3 100%);
+  border: 1px solid #63707a;
+  transform: rotate(18deg);
+}
+.avatar__regador::before {
+  /* bico do regador */
+  content: '';
+  position: absolute;
+  right: -7px;
+  top: 1px;
+  width: 8px;
+  height: 3px;
+  border-radius: 2px;
+  background: #8a99a3;
+  border: 1px solid #63707a;
+  transform: rotate(-18deg);
+}
+
+.avatar__regador-gota {
+  position: absolute;
+  right: -9px;
+  top: 4px;
+  width: 3px;
+  height: 4px;
+  border-radius: 50% 50% 50% 0;
+  background: var(--agua);
+  opacity: 0;
+  animation: gota-cair 0.5s ease-in infinite;
+}
+.avatar__regador-gota--1 {
+  animation-delay: 0s;
+}
+.avatar__regador-gota--2 {
+  right: -5px;
+  animation-delay: 0.17s;
+}
+.avatar__regador-gota--3 {
+  right: -12px;
+  animation-delay: 0.34s;
+}
+@keyframes gota-cair {
+  0% {
+    transform: translateY(0) rotate(45deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(22px) rotate(45deg);
+    opacity: 0;
+  }
+}
+
+.avatar__faiscas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  font-size: 13px;
+}
+.avatar__faiscas span {
+  position: absolute;
+  animation: faisca-orbitar 0.9s ease-out forwards;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+.avatar__faiscas span:nth-child(1) {
+  top: 8px;
+  left: -6px;
+  animation-delay: 0s;
+}
+.avatar__faiscas span:nth-child(2) {
+  top: -2px;
+  left: 14px;
+  animation-delay: 0.12s;
+}
+.avatar__faiscas span:nth-child(3) {
+  top: 14px;
+  left: 22px;
+  animation-delay: 0.24s;
+}
+@keyframes faisca-orbitar {
+  0% {
+    transform: scale(0.4) translateY(4px);
+    opacity: 0;
+  }
+  35% {
+    transform: scale(1.15) translateY(-4px);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.8) translateY(-14px);
+    opacity: 0;
+  }
+}
+
+.avatar__moeda-voo,
+.avatar__semente-voo {
+  position: absolute;
+  top: -6px;
+  left: 12px;
+  font-size: 16px;
+  pointer-events: none;
+  animation: flutuar-subir 0.9s ease-out forwards;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
+}
+
 /* ---------- vaso + planta ---------- */
 
 .vaso-raiz {
@@ -337,7 +461,10 @@
   border-radius: 999px;
 }
 
-.vaso__corpo {
+/* corpo-grupo: caixa de posicionamento fixa (32x20), o `.vaso__corpo` dentro
+   dela e que muda de forma/cor conforme `tipoVaso`/`corVaso` (game/vasoVisual.ts,
+   escolhidos pelo jogador) -- ver README "Colocacao em fileiras", 2026-08-19. */
+.vaso__corpo-grupo {
   position: absolute;
   z-index: 1;
   bottom: 0;
@@ -345,9 +472,53 @@
   width: 32px;
   height: 20px;
   transform: translateX(-50%);
-  clip-path: polygon(0% 0%, 100% 0%, 82% 100%, 18% 100%);
-  background: linear-gradient(180deg, var(--barro-claro) 0%, var(--barro) 55%, var(--barro-escuro) 100%);
+}
+
+.vaso__corpo {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--vaso-cor, var(--barro)) 65%, white) 0%,
+    var(--vaso-cor, var(--barro)) 55%,
+    color-mix(in srgb, var(--vaso-cor, var(--barro)) 75%, black) 100%
+  );
   box-shadow: inset 0 -4px 6px rgba(0, 0, 0, 0.25), inset 0 2px 0 rgba(255, 255, 255, 0.25);
+}
+
+/* barro: classico, trapezoide */
+.vaso__corpo--barro {
+  clip-path: polygon(0% 0%, 100% 0%, 82% 100%, 18% 100%);
+}
+/* ceramica: rebordo reto no topo (aba), afunila mais */
+.vaso__corpo--ceramica {
+  clip-path: polygon(4% 0%, 96% 0%, 100% 16%, 84% 100%, 16% 100%, 0% 16%);
+}
+/* plastico: cilindrico, quase reto, mais "moderno" */
+.vaso__corpo--plastico {
+  clip-path: polygon(6% 0%, 94% 0%, 88% 100%, 12% 100%);
+}
+/* cesto de vime: textura tecida (linhas horizontais) + alcas nas laterais */
+.vaso__corpo--cesto {
+  clip-path: polygon(0% 8%, 100% 8%, 84% 100%, 16% 100%);
+  background-image: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.14) 0 2px, transparent 2px 5px);
+}
+.vaso__corpo--cesto::before,
+.vaso__corpo--cesto::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  width: 6px;
+  height: 8px;
+  border: 2px solid color-mix(in srgb, var(--vaso-cor, var(--barro)) 75%, black);
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+}
+.vaso__corpo--cesto::before {
+  left: 2px;
+}
+.vaso__corpo--cesto::after {
+  right: 2px;
 }
 
 .vaso__terra {
@@ -374,7 +545,17 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-/* folhagem: cresce por fase, ver PlantSprite.tsx para que classes aparecem em cada fase */
+/* vaso colocado mas ainda sem planta -- so terra visivel, sem folhagem */
+.vaso--vazio .vaso__corpo {
+  opacity: 0.85;
+}
+.vaso__emblema--plantar {
+  animation: emblema-flutuar 1.6s ease-in-out infinite;
+  opacity: 0.8;
+}
+
+/* folhagem: cresce por fase, ver PlantSprite.tsx para que classes aparecem em cada fase.
+   `--<forma>` varia por especie (especieVisual.ts), nao so por fase. */
 
 .vaso__folhagem {
   position: absolute;
@@ -433,11 +614,73 @@
   height: 15px;
 }
 
+/* folhagem--agulha: alecrim/alfazema -- folhas finas tipo espeto em vez de largas, 4a folha extra */
+.vaso__folhagem--agulha .vaso__folha {
+  width: 5px;
+  height: 22px;
+  border-radius: 999px;
+  background: linear-gradient(160deg, var(--lima) 0%, var(--verde-700) 100%);
+}
+.vaso__folhagem--agulha .vaso__folha--1 {
+  left: -12px;
+}
+.vaso__folhagem--agulha .vaso__folha--2 {
+  left: -3px;
+  height: 27px;
+}
+.vaso__folhagem--agulha .vaso__folha--3 {
+  left: 6px;
+}
+.vaso__folhagem--agulha .vaso__folha--4 {
+  left: -8px;
+  height: 18px;
+  transform: rotate(-32deg);
+}
+
+/* folhagem--suculenta: suculenta/cacto -- folhas gordas em roseta, mais baixas e sobrepostas */
+.vaso__folhagem--suculenta .vaso__folha {
+  width: 13px;
+  height: 13px;
+  border-radius: 55%;
+  background: linear-gradient(160deg, #9fd68a 0%, var(--verde-500) 100%);
+}
+.vaso__folhagem--suculenta .vaso__folha--1 {
+  left: -10px;
+  bottom: -1px;
+  transform: rotate(-30deg);
+}
+.vaso__folhagem--suculenta .vaso__folha--2 {
+  left: -4px;
+  height: 17px;
+  transform: rotate(0deg);
+}
+.vaso__folhagem--suculenta .vaso__folha--3 {
+  left: 6px;
+  bottom: -1px;
+  transform: rotate(28deg);
+}
+
+/* folhagem--espiga: girassol -- caule unico e alto com folhas laterais pequenas, flor no topo */
+.vaso__folhagem--espiga {
+  bottom: 16px;
+}
+.vaso__folhagem--espiga .vaso__folha {
+  width: 6px;
+  height: 30px;
+  border-radius: 999px 999px 0 0;
+  left: -3px;
+}
+.vaso__folhagem--espiga .vaso__folha--2,
+.vaso__folhagem--espiga .vaso__folha--3 {
+  display: none;
+}
+
 .vaso__fruto {
   position: absolute;
   width: 8px;
   height: 8px;
   border-radius: 50%;
+  background: var(--fruto-cor, var(--laranja));
   box-shadow: inset 0 -2px 2px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 .vaso__fruto--1 {
@@ -451,6 +694,61 @@
 .vaso__fruto--3 {
   left: -2px;
   bottom: 8px;
+}
+
+/* fruto--estrela: alfazema/cacto -- flor em estrela de 5 pontas */
+.vaso__fruto--estrela {
+  width: 9px;
+  height: 9px;
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+}
+
+/* fruto--trombeta: petunia -- cone alongado, mais estreito na base */
+.vaso__fruto--trombeta {
+  width: 7px;
+  height: 12px;
+  border-radius: 0 0 50% 50%;
+  clip-path: polygon(50% 0%, 100% 70%, 78% 100%, 22% 100%, 0% 70%);
+}
+.vaso__fruto--trombeta.vaso__fruto--2 {
+  bottom: 20px;
+}
+
+/* fruto-grande: calendula/girassol -- flor unica com petalas radiais + centro, ancorada no topo da folhagem */
+.vaso__fruto-grupo--flor_grande {
+  position: absolute;
+  bottom: 20px;
+  left: -3px;
+}
+.vaso__flor-grande {
+  position: relative;
+  display: block;
+  width: 2px;
+  height: 2px;
+}
+.vaso__flor-grande__petala {
+  position: absolute;
+  width: 7px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--fruto-cor, var(--ouro));
+  transform-origin: 50% 100%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+.vaso__flor-grande__petala--1 { transform: rotate(0deg) translateY(-5px); }
+.vaso__flor-grande__petala--2 { transform: rotate(72deg) translateY(-5px); }
+.vaso__flor-grande__petala--3 { transform: rotate(144deg) translateY(-5px); }
+.vaso__flor-grande__petala--4 { transform: rotate(216deg) translateY(-5px); }
+.vaso__flor-grande__petala--5 { transform: rotate(288deg) translateY(-5px); }
+.vaso__flor-grande__centro {
+  position: absolute;
+  top: -5px;
+  left: -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #6b4a2d;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
 }
 
 /* emblema de estado (bolha por cima do vaso) */
@@ -496,4 +794,183 @@
 
 .vaso-raiz--selecionada .vaso__corpo {
   box-shadow: 0 0 0 3px var(--lima), inset 0 -4px 6px rgba(0, 0, 0, 0.25), inset 0 2px 0 rgba(255, 255, 255, 0.25);
+}
+
+/* "perto" -- avatar esta ao alcance mas o jogador ainda nao clicou (ver
+   README "Clicar para abrir", 2026-08-19: a selecao deixou de ser automatica
+   por proximidade, so mostra este anel a convidar a clicar). */
+.vaso-raiz--perto:not(.vaso-raiz--selecionada) .vaso__corpo {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85), inset 0 -4px 6px rgba(0, 0, 0, 0.25), inset 0 2px 0 rgba(255, 255, 255, 0.25);
+  animation: vaso-perto-pulso 1.3s ease-in-out infinite;
+}
+@keyframes vaso-perto-pulso {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.12); }
+}
+
+/* ---------- balao de fala (acoes rapidas) ---------- */
+/* substitui a abertura automatica do sheet cheio de ecra -- so aparece ao
+   CLICAR num vaso (ver README "Clicar para abrir", 2026-08-19). Ancorado ao
+   mundo (mesma projecao iso que o vaso), por isso acompanha a camara sem
+   logica extra de sincronizacao. */
+
+.balao-raiz {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 999;
+  margin-top: -58px;
+  pointer-events: none;
+}
+
+.balao {
+  position: relative;
+  pointer-events: auto;
+  min-width: 168px;
+  background: var(--superficie);
+  border: 2px solid var(--madeira-escura);
+  border-radius: 16px;
+  padding: 10px 12px 11px;
+  box-shadow: var(--sombra-hover);
+  animation: balao-surgir 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes balao-surgir {
+  from {
+    transform: scale(0.75);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.balao__seta {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 14px;
+  height: 14px;
+  transform: translateX(-50%) translateY(-8px) rotate(45deg);
+  background: var(--superficie);
+  border-right: 2px solid var(--madeira-escura);
+  border-bottom: 2px solid var(--madeira-escura);
+}
+
+.balao__fechar {
+  position: absolute;
+  top: -9px;
+  right: -9px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: 999px;
+  font-size: 13px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cinza-100);
+  color: var(--texto-suave);
+  box-shadow: 0 2px 0 var(--cinza-300), var(--sombra);
+}
+
+.balao__nome {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--primaria-escura);
+  margin-bottom: 6px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.balao__opcoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  justify-content: center;
+}
+
+.balao__opcao {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 12px;
+  background: var(--lima-suave);
+  color: var(--primaria-escura);
+  box-shadow: 0 2px 0 var(--lima);
+  white-space: nowrap;
+}
+.balao__opcao:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 var(--lima);
+}
+.balao__opcao--regar {
+  background: var(--agua-suave);
+  color: #1c5a86;
+  box-shadow: 0 2px 0 var(--agua);
+}
+.balao__opcao--sol {
+  background: var(--ouro-suave);
+  color: #7a5309;
+  box-shadow: 0 2px 0 var(--ouro);
+}
+.balao__opcao--praga {
+  background: var(--laranja-suave);
+  color: #7a3312;
+  box-shadow: 0 2px 0 var(--laranja);
+}
+.balao__opcao--vender {
+  background: var(--ouro-suave);
+  color: #7a5309;
+  box-shadow: 0 2px 0 var(--ouro);
+}
+.balao__opcao--detalhes {
+  background: var(--cinza-100);
+  color: var(--texto-suave);
+  box-shadow: 0 2px 0 var(--cinza-300);
+}
+
+/* ---------- parcela vazia (sem vaso) -- so terra livre, convida a colocar um vaso ---------- */
+
+.parcela-raiz {
+  position: absolute;
+  left: 0;
+  top: 0;
+  cursor: pointer;
+}
+
+.parcela {
+  position: relative;
+  width: 30px;
+  height: 16px;
+  transform: translate(-50%, -100%);
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(74, 54, 35, 0.32) 0%, transparent 72%);
+  border: 1.5px dashed rgba(107, 63, 34, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.parcela:hover,
+.parcela-raiz--perto .parcela {
+  background: radial-gradient(ellipse at center, rgba(74, 54, 35, 0.48) 0%, transparent 72%);
+}
+
+.parcela__mais {
+  font-size: 11px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
+}
+
+.parcela-raiz--perto .parcela__mais {
+  opacity: 0.75;
 }

@@ -1,14 +1,18 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { db } from '../db/schema'
-import type { Especie, ItemLoja, Jogador, NivelLuz } from '../db/schema'
+import type { Especie, ItemLoja, Jogador, NivelLuz, SementeInventario, TipoVaso, VasoPossuido } from '../db/schema'
 import {
-  comprarEPlantarSemente,
+  colocarVasoNaParcela,
   comprarETratarComRemedio,
+  comprarSemente,
+  ganharSementeGratis,
+  listarInventarioSementes,
   listarLoja,
   listarPlantasComEspecie,
+  listarVasos,
   mudarPosicaoSol,
   obterJogador,
-  plantarSemente,
+  plantarNoVaso,
   processarTodasAsPlantas,
   regarPlanta,
   transplantarVaso,
@@ -18,13 +22,17 @@ import {
 } from '../db/actions'
 import { detetarProblemas } from '../game/notificacoes'
 import { calcularNivel } from '../game/nivel'
-import { GardenScene } from '../garden/GardenScene'
+import { GardenScene, type AcoesRapidasPlanta } from '../garden/GardenScene'
 import { VirtualJoystick } from '../garden/VirtualJoystick'
+import { dispararAcaoAvatar } from '../garden/movement'
 import { PlantActionSheet } from './PlantActionSheet'
 import { ShopSheet } from './ShopSheet'
+import { PotPickerSheet } from './PotPickerSheet'
+import { SeedPickerSheet } from './SeedPickerSheet'
 import { Folha } from './Folha'
 
 const INTERVALO_VERIFICACAO_MS = 5 * 60_000 // verifica problemas a cada 5 min enquanto a app estiver aberta
+const ORDEM_LUZ: NivelLuz[] = ['sombra', 'sombra_parcial', 'sol_parcial', 'sol_pleno']
 
 function podeNotificar() {
   return typeof window !== 'undefined' && 'Notification' in window
@@ -32,13 +40,18 @@ function podeNotificar() {
 
 export function GardenView() {
   const [plantas, setPlantas] = useState<PlantaComEspecie[]>([])
+  const [vasos, setVasos] = useState<VasoPossuido[]>([])
+  const [inventario, setInventario] = useState<SementeInventario[]>([])
   const [especies, setEspecies] = useState<Especie[]>([])
   const [sementes, setSementes] = useState<ItemLoja[]>([])
   const [remedios, setRemedios] = useState<ItemLoja[]>([])
   const [jogador, setJogador] = useState<Jogador | undefined>(undefined)
   const [mensagem, setMensagem] = useState<string | null>(null)
   const [selecionadaId, setSelecionadaId] = useState<number | null>(null)
+  const [detalhesAbertos, setDetalhesAbertos] = useState(false)
   const [lojaAberta, setLojaAberta] = useState(false)
+  const [parcelaEmEscolha, setParcelaEmEscolha] = useState<number | null>(null)
+  const [vasoEmEscolha, setVasoEmEscolha] = useState<number | null>(null)
   const [permissaoNotificacoes, setPermissaoNotificacoes] = useState<NotificationPermission | 'indisponivel'>(
     podeNotificar() ? Notification.permission : 'indisponivel',
   )
@@ -48,8 +61,14 @@ export function GardenView() {
 
   const recarregar = useCallback(async () => {
     await processarTodasAsPlantas()
-    const lista = await listarPlantasComEspecie()
+    const [lista, listaVasos, listaInventario] = await Promise.all([
+      listarPlantasComEspecie(),
+      listarVasos(),
+      listarInventarioSementes(),
+    ])
     setPlantas(lista)
+    setVasos(listaVasos)
+    setInventario(listaInventario)
     setJogador(await obterJogador())
 
     if (podeNotificar() && Notification.permission === 'granted') {
@@ -59,7 +78,6 @@ export function GardenView() {
         jaNotificados.current.add(problema.chave)
         new Notification(problema.titulo, { body: problema.corpo })
       }
-      // limpa da memoria os problemas que ja nao existem, para poderem voltar a notificar se surgirem outra vez
       const chavesAtuais = new Set(problemas.map((p) => p.chave))
       for (const chave of jaNotificados.current) {
         if (!chavesAtuais.has(chave)) jaNotificados.current.delete(chave)
@@ -81,14 +99,10 @@ export function GardenView() {
     })
     recarregar()
 
-    // reavalia sempre que a aba volta a ficar visivel -- e assim que o "catch-up" acontece
     const aoFicarVisivel = () => {
       if (document.visibilityState === 'visible') recarregar()
     }
     document.addEventListener('visibilitychange', aoFicarVisivel)
-
-    // verificacao periodica para notificacoes -- so funciona com a app aberta
-    // (sem Push API/service worker nao ha aviso com a app fechada)
     const intervalo = setInterval(recarregar, INTERVALO_VERIFICACAO_MS)
 
     return () => {
@@ -97,9 +111,6 @@ export function GardenView() {
     }
   }, [recarregar])
 
-  // "moeda pop" -- bounce curto na pill de moedas sempre que o saldo sobe (venda de
-  // planta), estilo feedback de jogo mobile; ignora a 1a leitura (moedaAnterior ainda
-  // undefined) para nao disparar so por a app ter acabado de carregar
   useEffect(() => {
     if (jogador === undefined) return
     if (moedaAnterior.current !== undefined && jogador.moeda > moedaAnterior.current) {
@@ -116,27 +127,85 @@ export function GardenView() {
     setTimeout(() => setMensagem((atual) => (atual === texto ? null : atual)), 4000)
   }
 
-  async function plantar(speciesId: string) {
-    await plantarSemente(speciesId)
+  async function ganharGratis(speciesId: string) {
+    await ganharSementeGratis(speciesId)
+    avisar('Semente adicionada ao inventário -- planta-a num vaso vazio 🌱')
     await recarregar()
   }
 
-  async function comprarSemente(itemId: number) {
-    const resultado = await comprarEPlantarSemente(itemId)
+  async function comprarSementeLoja(itemId: number) {
+    const resultado = await comprarSemente(itemId)
     if (!resultado.ok) avisar(resultado.erro)
+    else avisar('Semente comprada -- planta-a num vaso vazio 🌱')
     await recarregar()
   }
 
   function selecionarPlanta(id: number | null) {
     setSelecionadaId(id)
+    if (id === null) setDetalhesAbertos(false)
+  }
+
+  async function colocarVaso(tipo: TipoVaso, cor: string) {
+    if (parcelaEmEscolha === null) return
+    const resultado = await colocarVasoNaParcela(parcelaEmEscolha, tipo, cor)
+    if (!resultado.ok) avisar(resultado.erro)
+    setParcelaEmEscolha(null)
+    await recarregar()
+  }
+
+  async function plantarSementeEscolhida(speciesId: string) {
+    if (vasoEmEscolha === null) return
+    dispararAcaoAvatar('plantar')
+    const resultado = await plantarNoVaso(vasoEmEscolha, speciesId)
+    if (!resultado.ok) avisar(resultado.erro)
+    setVasoEmEscolha(null)
+    await recarregar()
   }
 
   const selecionada = plantas.find(({ planta }) => planta.id === selecionadaId)
+  const vasoDaSelecionada = vasos.find((v) => v.plantaId === selecionadaId)
   const infoNivel = calcularNivel(jogador?.totalColhidas ?? 0)
+
+  const acoesRapidas: AcoesRapidasPlanta = {
+    onRegar: async (id) => {
+      await regarPlanta(id)
+      await recarregar()
+    },
+    onCiclarSol: async (id) => {
+      const item = plantas.find((p) => p.planta.id === id)
+      if (!item) return
+      const proximo = ORDEM_LUZ[(ORDEM_LUZ.indexOf(item.planta.posicaoSol) + 1) % ORDEM_LUZ.length]
+      await mudarPosicaoSol(id, proximo)
+      await recarregar()
+    },
+    onTratarPraga: async (id) => {
+      const resultado = await tratarPragaManual(id)
+      avisar(resultado.sucesso ? 'Tratamento resultou! 🌿' : 'O tratamento falhou desta vez -- tenta outra vez ou compra um remédio.')
+      await recarregar()
+    },
+    onVender: async (id) => {
+      const resultado = await venderPlanta(id)
+      if (resultado.ok) avisar(`Vendida por ${resultado.ganho}🪙`)
+      else avisar(resultado.erro)
+      setSelecionadaId(null)
+      await recarregar()
+    },
+    onAbrirDetalhes: (_id) => {
+      setDetalhesAbertos(true)
+    },
+  }
 
   return (
     <div className="jardim-shell">
-      <GardenScene plantas={plantas} selecionadaId={selecionadaId} onSelecionarPlanta={selecionarPlanta} />
+      <GardenScene
+        plantas={plantas}
+        vasos={vasos}
+        selecionadaId={selecionadaId}
+        onSelecionarPlanta={selecionarPlanta}
+        onAbrirVasoVazio={(vasoId) => setVasoEmEscolha(vasoId)}
+        onAbrirParcelaVazia={(slotIndex) => setParcelaEmEscolha(slotIndex)}
+        acoes={acoesRapidas}
+      />
       <VirtualJoystick />
 
       <div className="hud">
@@ -190,16 +259,27 @@ export function GardenView() {
         onFechar={() => setLojaAberta(false)}
         especies={especies}
         sementes={sementes}
-        onPlantar={plantar}
-        onComprarSemente={comprarSemente}
+        onGanharSementeGratis={ganharGratis}
+        onComprarSemente={comprarSementeLoja}
       />
 
-      {selecionada && (
+      <PotPickerSheet aberto={parcelaEmEscolha !== null} onFechar={() => setParcelaEmEscolha(null)} onConfirmar={colocarVaso} />
+
+      <SeedPickerSheet
+        aberto={vasoEmEscolha !== null}
+        onFechar={() => setVasoEmEscolha(null)}
+        inventario={inventario}
+        especies={especies}
+        onPlantar={plantarSementeEscolhida}
+      />
+
+      {selecionada && detalhesAbertos && (
         <PlantActionSheet
           planta={selecionada.planta}
           especieNome={selecionada.especieNome}
           especie={selecionada.especie}
-          onFechar={() => setSelecionadaId(null)}
+          vasoAtual={vasoDaSelecionada}
+          onFechar={() => setDetalhesAbertos(false)}
           onRegar={async () => {
             await regarPlanta(selecionada.planta.id!)
             await recarregar()
@@ -208,8 +288,8 @@ export function GardenView() {
             await mudarPosicaoSol(selecionada.planta.id!, posicao)
             await recarregar()
           }}
-          onTransplantar={async (incrementoCm: number) => {
-            const resultado = await transplantarVaso(selecionada.planta.id!, incrementoCm)
+          onTransplantar={async (incrementoCm: number, novoTipo: TipoVaso, novaCor: string) => {
+            const resultado = await transplantarVaso(selecionada.planta.id!, incrementoCm, novoTipo, novaCor)
             if (!resultado.ok) avisar(resultado.erro)
             await recarregar()
           }}
@@ -230,6 +310,7 @@ export function GardenView() {
             if (resultado.ok) avisar(`Vendida por ${resultado.ganho}🪙`)
             else avisar(resultado.erro)
             setSelecionadaId(null)
+            setDetalhesAbertos(false)
             await recarregar()
           }}
         />

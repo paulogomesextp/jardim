@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { avatarPos, inputParaMundo, inputVector, moveTarget, VELOCIDADE_AVATAR } from './movement'
+import { avatarPos, inputParaMundo, inputVector, moveTarget, ouvirAcaoAvatar, VELOCIDADE_AVATAR, type AcaoAvatar } from './movement'
 import { mundoParaEcra, profundidade } from './iso'
 
 interface Props {
@@ -29,10 +29,15 @@ export function Avatar({ limites }: Props) {
   const faceEsquerdaRef = useRef(false)
   const [aAndar, setAAndar] = useState(false)
   const [faceEsquerda, setFaceEsquerda] = useState(false)
+  const [acao, setAcao] = useState<AcaoAvatar>(null)
 
   useEffect(() => {
     limitesRef.current = limites
   }, [limites])
+
+  // acao em curso (regar/tratar/vender/plantar) -- disparada pelo balao de
+  // fala (PlantSpeechMenu.tsx) via `dispararAcaoAvatar`, ver movement.ts
+  useEffect(() => ouvirAcaoAvatar(setAcao), [])
 
   useEffect(() => {
     let anterior = performance.now()
@@ -113,7 +118,7 @@ export function Avatar({ limites }: Props) {
       className="avatar-raiz"
       style={{ transform: `translate(${inicial.left}px, ${inicial.top}px) translate(-50%, -100%)` }}
     >
-      <div className={`avatar ${aAndar ? 'avatar--anda' : ''}`}>
+      <div className={`avatar ${aAndar ? 'avatar--anda' : ''} ${acao ? `avatar--acao-${acao}` : ''}`}>
         <div className="avatar__sombra" />
         <div className={`avatar__flip ${faceEsquerda ? 'avatar__flip--esquerda' : ''}`}>
           <div className="avatar__grupo">
@@ -122,7 +127,15 @@ export function Avatar({ limites }: Props) {
             <div className="avatar__corpo">
               <div className="avatar__braco avatar__braco--tras" />
               <div className="avatar__peito" />
-              <div className="avatar__braco avatar__braco--frente" />
+              <div className="avatar__braco avatar__braco--frente">
+                {acao === 'regar' && (
+                  <div className="avatar__regador" aria-hidden="true">
+                    <span className="avatar__regador-gota avatar__regador-gota--1" />
+                    <span className="avatar__regador-gota avatar__regador-gota--2" />
+                    <span className="avatar__regador-gota avatar__regador-gota--3" />
+                  </div>
+                )}
+              </div>
             </div>
             <div className="avatar__cabeca">
               <span className="avatar__olho avatar__olho--esq" />
@@ -134,6 +147,23 @@ export function Avatar({ limites }: Props) {
             </div>
           </div>
         </div>
+        {acao === 'tratar' && (
+          <div className="avatar__faiscas" aria-hidden="true">
+            <span>✨</span>
+            <span>✨</span>
+            <span>✨</span>
+          </div>
+        )}
+        {acao === 'vender' && (
+          <span className="avatar__moeda-voo" aria-hidden="true">
+            🪙
+          </span>
+        )}
+        {acao === 'plantar' && (
+          <span className="avatar__semente-voo" aria-hidden="true">
+            🌱
+          </span>
+        )}
       </div>
     </div>
   )

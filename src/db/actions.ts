@@ -1,6 +1,17 @@
-import { db, type Especie, type Fase, type ItemLoja, type NivelLuz, type PlantaPossuida } from './schema'
+import {
+  db,
+  type Especie,
+  type Fase,
+  type ItemLoja,
+  type NivelLuz,
+  type PlantaPossuida,
+  type SementeInventario,
+  type TipoVaso,
+  type VasoPossuido,
+} from './schema'
 import { processarAoAbrir } from '../game/growth'
 import { CHANCE_SUCESSO_TRATAMENTO_MANUAL, GRACA_MANUAL_HORAS, GRACA_REMEDIO_HORAS } from '../game/pragas'
+import { precoVaso } from '../game/vasoVisual'
 
 const HORA_MS = 3_600_000
 const FASES_DEMO: Exclude<Fase, 'semente'>[] = ['germinacao', 'rebento', 'jovem', 'adulta']
@@ -90,15 +101,21 @@ export async function semearJardimDemo() {
     }
   })
 
-  await db.plantas.bulkAdd(plantas)
+  const idsPlantas = await db.plantas.bulkAdd(plantas, { allKeys: true })
+  const vasos: VasoPossuido[] = idsPlantas.map((plantaId, slotIndex) => ({
+    slotIndex,
+    tipo: 'barro',
+    cor: '#c1683f',
+    plantaId: plantaId as number,
+  }))
+  await db.vasos.bulkAdd(vasos)
 }
 
-export async function plantarSemente(speciesId: string): Promise<number> {
+/** Cria a planta em si (germinacao) -- uso interno, chamado depois de confirmar vaso vazio + inventario, ver `plantarNoVaso`. */
+async function criarPlanta(speciesId: string): Promise<number> {
   const agora = Date.now()
   const nova: PlantaPossuida = {
     speciesId,
-    // 'semente' fica reservado para uma futura fase de inventario (semente
-    // comprada mas ainda nao plantada) -- ao plantar entra logo em germinacao
     fase: 'germinacao',
     dataInicioFase: agora,
     ultimaRega: null,
@@ -112,6 +129,66 @@ export async function plantarSemente(speciesId: string): Promise<number> {
     ultimaAvaliacao: agora,
   }
   return db.plantas.add(nova) as Promise<number>
+}
+
+/**
+ * Planta uma semente do inventário (`SementeInventario`, ver `comprarSemente`/
+ * `ganharSementeGratis`) num vaso já colocado e vazio -- nunca cria vaso
+ * nem escolhe parcela sozinho (ver README "Colocação em fileiras",
+ * 2026-08-19): o jogador tem sempre de colocar o vaso primeiro
+ * (`colocarVasoNaParcela`).
+ */
+export async function plantarNoVaso(vasoId: number, speciesId: string): Promise<{ ok: true } | { ok: false; erro: string }> {
+  const vaso = await db.vasos.get(vasoId)
+  if (!vaso) return { ok: false, erro: 'Vaso não encontrado' }
+  if (vaso.plantaId !== null) return { ok: false, erro: 'Este vaso já tem uma planta' }
+
+  const inventario = await db.sementesInventario.where('speciesId').equals(speciesId).first()
+  if (!inventario || inventario.quantidade < 1) return { ok: false, erro: 'Não tens sementes desta espécie' }
+
+  const plantaId = await criarPlanta(speciesId)
+  await db.vasos.update(vasoId, { plantaId })
+  if (inventario.quantidade <= 1) await db.sementesInventario.delete(inventario.id!)
+  else await db.sementesInventario.update(inventario.id!, { quantidade: inventario.quantidade - 1 })
+
+  return { ok: true }
+}
+
+/** Coloca um vaso novo (vazio) numa parcela livre -- custo em moeda conforme o tipo escolhido (ver game/vasoVisual.ts). */
+export async function colocarVasoNaParcela(
+  slotIndex: number,
+  tipo: TipoVaso,
+  cor: string,
+): Promise<{ ok: true } | { ok: false; erro: string }> {
+  const existente = await db.vasos.where('slotIndex').equals(slotIndex).first()
+  if (existente) return { ok: false, erro: 'Já há um vaso nesta parcela' }
+
+  const custo = precoVaso(tipo)
+  const jogador = await db.jogador.get(1)
+  if (!jogador || jogador.moeda < custo) return { ok: false, erro: 'Moeda insuficiente' }
+
+  await db.jogador.update(1, { moeda: jogador.moeda - custo })
+  await db.vasos.add({ slotIndex, tipo, cor, plantaId: null })
+  return { ok: true }
+}
+
+export async function listarVasos(): Promise<VasoPossuido[]> {
+  return db.vasos.toArray()
+}
+
+export async function listarInventarioSementes(): Promise<SementeInventario[]> {
+  return db.sementesInventario.toArray()
+}
+
+async function adicionarAoInventario(speciesId: string, quantidade: number) {
+  const existente = await db.sementesInventario.where('speciesId').equals(speciesId).first()
+  if (existente) await db.sementesInventario.update(existente.id!, { quantidade: existente.quantidade + quantidade })
+  else await db.sementesInventario.add({ speciesId, quantidade })
+}
+
+/** Chip "grátis, para testes" da loja -- entra no inventário como uma compra normal, não planta logo (mesma regra para todas as sementes). */
+export async function ganharSementeGratis(speciesId: string) {
+  await adicionarAoInventario(speciesId, 1)
 }
 
 /**
@@ -146,10 +223,23 @@ export function custoTransplante(incrementoCm: number): number {
   return incrementoCm * CUSTO_POR_CM_VASO
 }
 
-/** Transplanta para um vaso maior, com custo em moeda proporcional ao aumento escolhido. */
+/** Encontra o vaso físico onde uma planta está -- lookup por `plantaId`, tabela pequena (~dezenas de linhas), sem indice dedicado necessario. */
+export async function obterVasoDaPlanta(plantaId: number): Promise<VasoPossuido | undefined> {
+  return db.vasos.where('plantaId').equals(plantaId).first()
+}
+
+/**
+ * Transplanta para um vaso maior (ou só troca o estilo), com custo em moeda
+ * proporcional ao aumento de tamanho escolhido -- `novoTipo`/`novaCor` são
+ * opcionais, para a mesma ação também servir de "trocar vaso" cosmético
+ * (ver README "Colocação em fileiras", 2026-08-19) sem mexer na parcela onde
+ * a planta já está.
+ */
 export async function transplantarVaso(
   id: number,
   incrementoCm: number,
+  novoTipo?: TipoVaso,
+  novaCor?: string,
 ): Promise<{ ok: true } | { ok: false; erro: string }> {
   const planta = await db.plantas.get(id)
   if (!planta) return { ok: false, erro: 'Planta nao encontrada' }
@@ -159,6 +249,16 @@ export async function transplantarVaso(
 
   await db.jogador.update(1, { moeda: jogador.moeda - custo })
   await db.plantas.update(id, { tamanhoVasoAtual: planta.tamanhoVasoAtual + incrementoCm })
+
+  if (novoTipo || novaCor) {
+    const vaso = await obterVasoDaPlanta(id)
+    if (vaso) {
+      const alteracoes: Partial<VasoPossuido> = {}
+      if (novoTipo) alteracoes.tipo = novoTipo
+      if (novaCor) alteracoes.cor = novaCor
+      await db.vasos.update(vaso.id!, alteracoes)
+    }
+  }
   return { ok: true }
 }
 
@@ -189,15 +289,21 @@ export async function processarTodasAsPlantas() {
   }
 }
 
-/** Compra uma semente da loja e planta-a logo -- falha se nao houver moeda suficiente. */
-export async function comprarEPlantarSemente(itemLojaId: number): Promise<{ ok: true } | { ok: false; erro: string }> {
+/**
+ * Compra uma semente da loja -- entra no inventário (`SementeInventario`),
+ * NÃO planta logo (ver README "Colocação em fileiras", 2026-08-19): o
+ * jogador escolhe depois um vaso vazio já colocado e planta a partir daí
+ * (`plantarNoVaso`), em vez de a semente aparecer sozinha num sítio
+ * aleatório do jardim.
+ */
+export async function comprarSemente(itemLojaId: number): Promise<{ ok: true } | { ok: false; erro: string }> {
   const item = await db.loja.get(itemLojaId)
   if (!item || item.tipo !== 'semente' || !item.speciesId) return { ok: false, erro: 'Item invalido' }
   const jogador = await db.jogador.get(1)
   if (!jogador || jogador.moeda < item.preco) return { ok: false, erro: 'Moeda insuficiente' }
 
   await db.jogador.update(1, { moeda: jogador.moeda - item.preco })
-  await plantarSemente(item.speciesId)
+  await adicionarAoInventario(item.speciesId, 1)
   return { ok: true }
 }
 
@@ -242,6 +348,9 @@ export async function venderPlanta(plantaId: number): Promise<{ ok: true; ganho:
     totalColhidas: (jogador?.totalColhidas ?? 0) + 1,
   })
   await db.plantas.delete(plantaId)
+  // o vaso fica no jardim, vazio -- so a planta desaparece (ver README "Colocacao em fileiras")
+  const vaso = await obterVasoDaPlanta(plantaId)
+  if (vaso) await db.vasos.update(vaso.id!, { plantaId: null })
   return { ok: true, ganho }
 }
 

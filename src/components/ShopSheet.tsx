@@ -6,12 +6,17 @@ interface Props {
   onFechar: () => void
   especies: Especie[]
   sementes: ItemLoja[]
-  onPlantar: (speciesId: string) => void
+  onGanharSementeGratis: (speciesId: string) => void
   onComprarSemente: (itemId: number) => void
 }
 
-/** Loja/plantar-gratis, extraida do antigo cabecalho da GardenView -- aberta por botao no HUD sobre o Canvas 3D. */
-export function ShopSheet({ aberto, onFechar, especies, sementes, onPlantar, onComprarSemente }: Props) {
+/**
+ * Loja -- comprar (ou ganhar de graca, para testes) so adiciona ao
+ * inventario de sementes, nunca planta logo (ver README "Colocacao em
+ * fileiras", 2026-08-19): o jogador escolhe depois um vaso vazio ja
+ * colocado no jardim para plantar a partir dai.
+ */
+export function ShopSheet({ aberto, onFechar, especies, sementes, onGanharSementeGratis, onComprarSemente }: Props) {
   // feedback "bouncy" por clique (estilo jogo mobile) -- guarda so a chave do
   // ultimo chip tocado, a classe CSS auto-remove-se a si propria via
   // animationend, nao precisa de limpar com setTimeout
@@ -24,7 +29,7 @@ export function ShopSheet({ aberto, onFechar, especies, sementes, onPlantar, onC
         ×
       </button>
       <div className="secao">
-        <div className="secao__titulo">Plantar semente nova (grátis, para testes)</div>
+        <div className="secao__titulo">Semente grátis (para testes) -- vai para o inventário</div>
         <div className="chip-row">
           {especies.map((e) => (
             <button
@@ -33,7 +38,7 @@ export function ShopSheet({ aberto, onFechar, especies, sementes, onPlantar, onC
               onAnimationEnd={() => setUltimoTocado((atual) => (atual === `e${e.id}` ? null : atual))}
               onClick={() => {
                 setUltimoTocado(`e${e.id}`)
-                onPlantar(e.id)
+                onGanharSementeGratis(e.id)
               }}
             >
               🌱 {e.nome}
@@ -42,7 +47,7 @@ export function ShopSheet({ aberto, onFechar, especies, sementes, onPlantar, onC
         </div>
       </div>
       <div className="secao">
-        <div className="secao__titulo">Loja de sementes</div>
+        <div className="secao__titulo">Loja de sementes -- vai para o inventário</div>
         <div className="chip-row">
           {sementes.map((item) => (
             <button

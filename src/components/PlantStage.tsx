@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import type { Especie, ItemLoja, NivelLuz, PlantaPossuida } from '../db/schema'
+import type { Especie, ItemLoja, NivelLuz, PlantaPossuida, TipoVaso, VasoPossuido } from '../db/schema'
 import { CHANCE_SUCESSO_TRATAMENTO_MANUAL, NOMES_PRAGA } from '../game/pragas'
 import { custoTransplante, INCREMENTOS_VASO_CM } from '../db/actions'
 import { formatarHoras, proximaFaseInfo, proximaRegaInfo } from '../game/temporizadores'
 import { escolherImagemPlanta } from '../game/imagemPlanta'
+import { CORES_VASO, TIPOS_VASO } from '../game/vasoVisual'
 
 const ROTULOS_LUZ: Record<NivelLuz, string> = {
   sol_pleno: 'Sol pleno',
@@ -24,9 +25,10 @@ interface Props {
   planta: PlantaPossuida
   especieNome: string
   especie: Especie | undefined
+  vasoAtual: VasoPossuido | undefined
   onRegar: () => void
   onMudarSol: (posicao: NivelLuz) => void
-  onTransplantar: (incrementoCm: number) => void
+  onTransplantar: (incrementoCm: number, novoTipo: TipoVaso, novaCor: string) => void
   onTratarPraga: () => void
   onVender: () => void
   remedioDisponivel?: ItemLoja
@@ -37,6 +39,7 @@ export function PlantStage({
   planta,
   especieNome,
   especie,
+  vasoAtual,
   onRegar,
   onMudarSol,
   onTransplantar,
@@ -47,6 +50,8 @@ export function PlantStage({
 }: Props) {
   const corSaude = planta.saude >= 70 ? 'var(--primaria)' : planta.saude >= 40 ? 'var(--aviso)' : 'var(--erro)'
   const [incrementoEscolhido, setIncrementoEscolhido] = useState<number>(INCREMENTOS_VASO_CM[0])
+  const [tipoEscolhido, setTipoEscolhido] = useState<TipoVaso>(vasoAtual?.tipo ?? TIPOS_VASO[0].id)
+  const [corEscolhida, setCorEscolhida] = useState<string>(vasoAtual?.cor ?? CORES_VASO[0].valor)
   const [agora, setAgora] = useState(() => Date.now())
 
   // pequenas animacoes de feedback por acao (estilo jogo mobile), nao guardam
@@ -185,15 +190,35 @@ export function PlantStage({
                   </option>
                 ))}
               </select>
+              <select value={tipoEscolhido} onChange={(e) => setTipoEscolhido(e.target.value as TipoVaso)}>
+                {TIPOS_VASO.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.nome}
+                  </option>
+                ))}
+              </select>
               <button
                 onClick={() => {
                   dispararFlutuante('🪴')
                   pulsarCrescimento()
-                  onTransplantar(incrementoEscolhido)
+                  onTransplantar(incrementoEscolhido, tipoEscolhido, corEscolhida)
                 }}
               >
                 🪴 Transplantar
               </button>
+            </div>
+            <div className="acoes-linha acoes-linha--cores">
+              {CORES_VASO.map((c) => (
+                <button
+                  key={c.id}
+                  className={`amostra-cor amostra-cor--mini ${corEscolhida === c.valor ? 'amostra-cor--ativa' : ''}`}
+                  style={{ background: c.valor }}
+                  onClick={() => setCorEscolhida(c.valor)}
+                  aria-label={c.nome}
+                  title={c.nome}
+                  type="button"
+                />
+              ))}
               <button
                 className="acao-btn--vender"
                 onClick={() => {

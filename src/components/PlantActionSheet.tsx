@@ -1,14 +1,15 @@
-import type { Especie, ItemLoja, NivelLuz, PlantaPossuida } from '../db/schema'
+import type { Especie, ItemLoja, NivelLuz, PlantaPossuida, TipoVaso, VasoPossuido } from '../db/schema'
 import { PlantStage } from './PlantStage'
 
 interface Props {
   planta: PlantaPossuida
   especieNome: string
   especie: Especie | undefined
+  vasoAtual: VasoPossuido | undefined
   onFechar: () => void
   onRegar: () => void
   onMudarSol: (posicao: NivelLuz) => void
-  onTransplantar: (incrementoCm: number) => void
+  onTransplantar: (incrementoCm: number, novoTipo: TipoVaso, novaCor: string) => void
   onTratarPraga: () => void
   onVender: () => void
   remedioDisponivel?: ItemLoja

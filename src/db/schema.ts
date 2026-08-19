@@ -4,6 +4,7 @@ export type Categoria = 'fruta' | 'flor' | 'arbusto' | 'vaso'
 export type NivelLuz = 'sol_pleno' | 'sol_parcial' | 'sombra_parcial' | 'sombra'
 export type Fase = 'semente' | 'germinacao' | 'rebento' | 'jovem' | 'adulta'
 export type Estado = 'saudavel' | 'stress' | 'praga' | 'morta'
+export type TipoVaso = 'barro' | 'ceramica' | 'plastico' | 'cesto'
 
 // cada praga esta ligada a UM tipo de negligencia especifico (ver game/pragas.ts)
 // -- decisao provisoria a rever com o Paulo: mapeamento real pode mudar.
@@ -64,11 +65,34 @@ export interface ItemLoja {
   preco: number
 }
 
+// vaso fisico, colocado numa parcela fixa do jardim (game/layout.ts) --
+// existe independentemente de ter planta la dentro (ver "Colocacao em
+// fileiras", reformulacao 2026-08-19): comprar uma semente NAO planta
+// logo, fica em SementeInventario ate o jogador escolher um vaso vazio.
+export interface VasoPossuido {
+  id?: number
+  slotIndex: number // posicao fixa na grelha do jardim, indice em game/layout.ts::gerarSlots()
+  tipo: TipoVaso
+  cor: string // hex escolhido pelo jogador em CORES_VASO (game/vasoVisual.ts)
+  plantaId: number | null // null = vaso vazio, por plantar
+}
+
+// sementes/mudas compradas mas ainda nao plantadas -- inventario simples
+// por especie (sem stacking de qualidade/variedade), consumido ao plantar
+// num vaso vazio (db/actions.ts::plantarNoVaso)
+export interface SementeInventario {
+  id?: number
+  speciesId: string
+  quantidade: number
+}
+
 export const db = new Dexie('jardim') as Dexie & {
   especies: EntityTable<Especie, 'id'>
   plantas: EntityTable<PlantaPossuida, 'id'>
   jogador: EntityTable<Jogador, 'id'>
   loja: EntityTable<ItemLoja, 'id'>
+  vasos: EntityTable<VasoPossuido, 'id'>
+  sementesInventario: EntityTable<SementeInventario, 'id'>
 }
 
 db.version(1).stores({
@@ -95,4 +119,29 @@ db.version(2)
       .modify((j: Jogador) => {
         if (j.totalColhidas === undefined) j.totalColhidas = 0
       })
+  })
+
+// v3 (colocacao em fileiras, 2026-08-19): jardim deixa de posicionar
+// plantas automaticamente por fase -- cada planta vive agora num `VasoPossuido`
+// numa parcela fixa (`slotIndex`). Quem ja tinha plantas antes desta versao
+// ganha um vaso de barro/terracota (a mesma cor que o vaso generico ja
+// tinha) por planta existente, em slots sequenciais 0..n-1, para nao perder
+// progresso -- ver game/layout.ts para o tamanho da grelha (sempre >= slots
+// existentes + folga).
+db.version(3)
+  .stores({
+    especies: 'id, categoria',
+    plantas: '++id, speciesId, fase, estado',
+    jogador: 'id',
+    loja: '++id, tipo, speciesId',
+    vasos: '++id, slotIndex, plantaId',
+    sementesInventario: '++id, speciesId',
+  })
+  .upgrade(async (tx) => {
+    const plantasExistentes = await tx.table('plantas').toArray()
+    let slot = 0
+    for (const planta of plantasExistentes) {
+      await tx.table('vasos').add({ slotIndex: slot, tipo: 'barro', cor: '#c1683f', plantaId: planta.id })
+      slot++
+    }
   })

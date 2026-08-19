@@ -82,3 +82,30 @@ export function inputParaMundo(ix: number, iz: number): { dx: number; dz: number
     dz: (iz - ix) / 2,
   }
 }
+
+/**
+ * Sinal de "ação em curso" do avatar (regar/tratar/vender/plantar) -- pub/sub
+ * simples fora do React, mesma família de `inputVector`/`moveTarget`, mas
+ * este muda raramente (só quando uma ação é escolhida no balão de fala,
+ * `PlantSpeechMenu.tsx`), por isso os subscritores usam `useState` normal em
+ * vez de ler a cada frame -- só o `Avatar.tsx` precisa disto, para mostrar o
+ * regador/faíscas/moeda por cima do boneco durante a animação da ação.
+ */
+export type AcaoAvatar = 'regar' | 'tratar' | 'vender' | 'plantar' | null
+let acaoAtual: AcaoAvatar = null
+const ouvintesAcao = new Set<(a: AcaoAvatar) => void>()
+
+export function dispararAcaoAvatar(tipo: Exclude<AcaoAvatar, null>, duracaoMs = 900) {
+  acaoAtual = tipo
+  for (const cb of ouvintesAcao) cb(acaoAtual)
+  setTimeout(() => {
+    if (acaoAtual !== tipo) return // uma acao mais recente ja tomou o lugar, nao a interrompas
+    acaoAtual = null
+    for (const cb of ouvintesAcao) cb(null)
+  }, duracaoMs)
+}
+
+export function ouvirAcaoAvatar(cb: (a: AcaoAvatar) => void): () => void {
+  ouvintesAcao.add(cb)
+  return () => ouvintesAcao.delete(cb)
+}
