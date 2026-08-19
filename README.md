@@ -261,12 +261,12 @@ estava anotada ali.
   de não inventar um mecanismo de "mover planta para outro vaso vazio";
   o transplante continua a redimensionar/re-estilizar o vaso onde a planta
   já está.
-  **Assunção a confirmar**: os "vasos mais pequenos" do pedido foram
-  interpretados como "trocar de estilo/tipo" (a troca de tipo/cor não tem
-  restrição de tamanho), não como reduzir literalmente o `tamanhoVasoAtual`
-  em cm -- isso continua só a subir (`INCREMENTOS_VASO_CM`), por realismo
-  (não se encolhe um vaso real) e porque `game/care.ts::taxaVaso` já pune
-  vaso pequeno demais para a fase atual.
+  **"Vasos mais pequenos"**: `INCREMENTOS_VASO_CM` inclui valores negativos
+  (-10/-5, além de +5/+10/+15) -- encolher custa moeda como crescer
+  (`Math.abs`), nunca desce abaixo de `TAMANHO_VASO_MINIMO_CM` (5cm), e um
+  vaso encolhido demais para a fase atual é penalizado pela saúde como
+  sempre (`game/care.ts::taxaVaso`) -- é uma escolha real do jogador
+  (ex: estética, ou para caber num espaço/composição), não só cosmética.
 - **Arte por espécie, não só por categoria** (`garden/especieVisual.ts`):
   4 formas de folhagem (padrão, agulha -- alecrim/alfazema, suculenta --
   cacto/suculenta, espiga -- girassol) × 5 formas de fruto/flor (baga,
@@ -351,11 +351,9 @@ sentido, talvez sem eliminar os vasos, vale a pena reler antes de recomeçar.
    aproximar do FarmVille sem inventar um sistema de pontos à parte --
    confirma se faz sentido como mecânica ou se preferes outra base (ex:
    nº de espécies diferentes cultivadas, em vez de colheitas totais).
-5. **[Sessão 2026-08-19 tarde]** Preço dos vasos (10-22🪙, arbitrário,
-   ver `game/vasoVisual.ts`) e se "vaso mais pequeno" devia mesmo poder
-   reduzir `tamanhoVasoAtual` (ver assunção documentada em "Colocação em
-   fileiras" acima) -- por agora só o estilo/cor troca livremente, o
-   tamanho em cm só sobe.
+5. **[Sessão 2026-08-19 tarde]** Preço dos vasos (10-22🪙, arbitrário, ver
+   `game/vasoVisual.ts`) e o preço/passo de encolher vaso (`-10cm`/`-5cm`,
+   mesmo custo por cm que crescer) -- valores todos arbitrários, a rever.
 6. **[Sessão 2026-08-19 tarde]** Confirma no telemóvel real que o balão de
    fala não fica cortado nas margens do ecrã em vasos perto da borda da
    grelha, e que o "pop" de entrada dos 100+ vasos ao carregar a app não

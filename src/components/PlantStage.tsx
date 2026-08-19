@@ -49,7 +49,10 @@ export function PlantStage({
   onComprarRemedio,
 }: Props) {
   const corSaude = planta.saude >= 70 ? 'var(--primaria)' : planta.saude >= 40 ? 'var(--aviso)' : 'var(--erro)'
-  const [incrementoEscolhido, setIncrementoEscolhido] = useState<number>(INCREMENTOS_VASO_CM[0])
+  // por omissao um crescimento pequeno (nao o 1o valor da lista, que agora inclui reducoes -- ver INCREMENTOS_VASO_CM)
+  const [incrementoEscolhido, setIncrementoEscolhido] = useState<number>(
+    INCREMENTOS_VASO_CM.find((cm) => cm > 0) ?? INCREMENTOS_VASO_CM[0],
+  )
   const [tipoEscolhido, setTipoEscolhido] = useState<TipoVaso>(vasoAtual?.tipo ?? TIPOS_VASO[0].id)
   const [corEscolhida, setCorEscolhida] = useState<string>(vasoAtual?.cor ?? CORES_VASO[0].valor)
   const [agora, setAgora] = useState(() => Date.now())
@@ -186,7 +189,7 @@ export function PlantStage({
               <select value={incrementoEscolhido} onChange={(e) => setIncrementoEscolhido(Number(e.target.value))}>
                 {INCREMENTOS_VASO_CM.map((cm) => (
                   <option key={cm} value={cm}>
-                    +{cm}cm ({custoTransplante(cm)}🪙)
+                    {cm > 0 ? `+${cm}` : cm}cm ({custoTransplante(cm)}🪙)
                   </option>
                 ))}
               </select>

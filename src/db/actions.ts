@@ -214,13 +214,21 @@ export async function mudarPosicaoSol(id: number, posicao: NivelLuz) {
   await db.plantas.update(id, { posicaoSol: posicao })
 }
 
-const CUSTO_POR_CM_VASO = 2 // moedas por cm de aumento -- arbitrario, a rever
+const CUSTO_POR_CM_VASO = 2 // moedas por cm de mudanca (aumento ou reducao) -- arbitrario, a rever
+const TAMANHO_VASO_MINIMO_CM = 5 // nunca deixa o vaso encolher abaixo disto, por mais fase pequena que a planta esteja
 
-/** Tamanhos de vaso oferecidos no transplante (cm de aumento face ao atual). */
-export const INCREMENTOS_VASO_CM = [5, 10, 15] as const
+/**
+ * Tamanhos de vaso oferecidos no transplante, em cm de MUDANÇA face ao atual
+ * -- negativos encolhem (pedido do Paulo, "vasos mais pequenos"), positivos
+ * aumentam. Custa moeda nos dois sentidos (é sempre um serviço de
+ * transplante) -- encolher demais um vaso que já está numa fase que
+ * precisa de mais espaço penaliza saúde via `game/care.ts::taxaVaso`, é
+ * uma escolha real do jogador, não só cosmética.
+ */
+export const INCREMENTOS_VASO_CM = [-10, -5, 5, 10, 15] as const
 
 export function custoTransplante(incrementoCm: number): number {
-  return incrementoCm * CUSTO_POR_CM_VASO
+  return Math.abs(incrementoCm) * CUSTO_POR_CM_VASO
 }
 
 /** Encontra o vaso físico onde uma planta está -- lookup por `plantaId`, tabela pequena (~dezenas de linhas), sem indice dedicado necessario. */
@@ -248,7 +256,8 @@ export async function transplantarVaso(
   if (!jogador || jogador.moeda < custo) return { ok: false, erro: 'Moeda insuficiente' }
 
   await db.jogador.update(1, { moeda: jogador.moeda - custo })
-  await db.plantas.update(id, { tamanhoVasoAtual: planta.tamanhoVasoAtual + incrementoCm })
+  const novoTamanho = Math.max(TAMANHO_VASO_MINIMO_CM, planta.tamanhoVasoAtual + incrementoCm)
+  await db.plantas.update(id, { tamanhoVasoAtual: novoTamanho })
 
   if (novoTipo || novaCor) {
     const vaso = await obterVasoDaPlanta(id)
