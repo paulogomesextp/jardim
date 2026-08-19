@@ -51,9 +51,18 @@ export interface Jogador {
   id: number // sempre 1, jogo single-player local
   moeda: number
   // total de plantas vendidas/colhidas ao longo de toda a vida do jogador -- nunca decresce,
-  // base do "Nivel do Jardim" (ver game/nivel.ts), acrescentado na reformulacao FarmVille
-  // (2026-08-19) para dar a sensacao de progressao/XP que o FarmVille original tinha.
+  // mantido so como estatistica ("colheitas") -- deixou de ser a base do nivel, ver `xp`.
   totalColhidas: number
+  // XP acumulado (nunca decresce) -- base do "Nivel do Jardim" (game/nivel.ts), ganho por
+  // tarefa (regar/colocar vaso/plantar/transplantar/tratar praga/vender, ver
+  // db/actions.ts::ganharXp), nao so por venda como na 1a versao deste sistema (schema v3).
+  xp: number
+  // chaves de `game/nivel.ts::XP_ACOES` que o jogador ja fez pelo menos uma vez -- usado
+  // pelo tutorial contextual (game/tutorial.ts) para so sugerir tarefas que ainda nao fez.
+  acoesFeitas: string[]
+  // ids de passos do tutorial (onboarding inicial + dicas contextuais, game/tutorial.ts)
+  // ja mostrados -- persistido para nunca repetir a mesma dica depois de vista/fechada.
+  tutorialVisto: string[]
 }
 
 export interface ItemLoja {
@@ -144,4 +153,32 @@ db.version(3)
       await tx.table('vasos').add({ slotIndex: slot, tipo: 'barro', cor: '#c1683f', plantaId: planta.id })
       slot++
     }
+  })
+
+// v4 (nivel por tarefa + tutorial, 2026-08-19): `xp` substitui `totalColhidas`
+// como base do "Nivel do Jardim" (game/nivel.ts) -- quem ja jogava fica com
+// o MESMO nivel que tinha (xp = totalColhidas * XP_ACOES.vender, a mesma
+// equivalencia usada por game/nivel.ts, ja que antes so a venda dava
+// progresso). `tutorialVisto` ja comeca com 'onboarding' para quem esta a
+// ser migrado (por definicao ja tinha um jogador antes desta versao, ou
+// seja ja jogava) -- nao faz sentido mostrar-lhe o tutorial de "boas-vindas"
+// outra vez so por ter atualizado a versao da app.
+db.version(4)
+  .stores({
+    especies: 'id, categoria',
+    plantas: '++id, speciesId, fase, estado',
+    jogador: 'id',
+    loja: '++id, tipo, speciesId',
+    vasos: '++id, slotIndex, plantaId',
+    sementesInventario: '++id, speciesId',
+  })
+  .upgrade(async (tx) => {
+    await tx
+      .table('jogador')
+      .toCollection()
+      .modify((j: Jogador) => {
+        if (j.xp === undefined) j.xp = (j.totalColhidas ?? 0) * 5
+        if (j.acoesFeitas === undefined) j.acoesFeitas = []
+        if (j.tutorialVisto === undefined) j.tutorialVisto = ['onboarding']
+      })
   })

@@ -44,7 +44,8 @@ src/
     notificacoes.ts    -- deteta problemas para Notification API
     layout.ts          -- grelha FIXA de parcelas do jardim (gerarSlots),
                           pura, sem saber nada de 3D/2D, so devolve slots
-    nivel.ts            -- "Nível do Jardim" (XP, ver "Reformulação FarmVille")
+    nivel.ts            -- "Nível do Jardim" (XP por tarefa, ver "Nível por tarefa" abaixo)
+    tutorial.ts          -- passos do onboarding + condicoes das dicas contextuais
     imagemPlanta.ts     -- escolhe a foto real certa (fase/sede/praga) no
                           cartão de detalhe (PlantStage) -- só aí, não no jardim
     vasoVisual.ts        -- catalogo de tipos/cores de vaso (ver "Colocacao em fileiras")
@@ -68,6 +69,7 @@ src/
     GardenView.tsx     -- ecrã principal (GardenScene + HUD + toolbar + sheets)
     PlantActionSheet.tsx / ShopSheet.tsx -- bottom sheets sobre a cena
     PotPickerSheet.tsx / SeedPickerSheet.tsx -- colocar vaso / plantar do inventario
+    OnboardingOverlay.tsx / TutorialDica.tsx -- tutorial inicial / dica contextual
     PlantStage.tsx      -- cartão 2D de detalhe/ações da planta selecionada
 ```
 
@@ -316,6 +318,68 @@ foco) e a posição exata do balão de fala relativa ao vaso em ecrãs muito
 estreitos -- vale a pena confirmar num telemóvel real que o balão não sai
 cortado nas margens.
 
+## Nível por tarefa + tutorial + reforço de persistência (2026-08-19, sessão Tom à noite)
+
+Pedido do Paulo: o jogo estar a "resetar" ao entrar (perder progresso), o
+Nível devia subir por fazer tarefas em geral (não só vender), e um
+tutorial inicial + dicas contextuais sobre o que ainda não fez.
+
+**Persistência -- investigação e reforço, sem bug de código encontrado:**
+não encontrei nenhum caminho de código que apague dados (sem
+`indexedDB.deleteDatabase`/`localStorage.clear` em lado nenhum), e testei
+ao vivo nesta sessão: o mesmo perfil de browser manteve `moeda` a descer
+de forma consistente (777→767→757→747→727→...) ao longo de **dezenas de
+recarregamentos de página** durante toda a sessão, incluindo através da
+migração para o schema v4 -- ou seja, o Dexie/IndexedDB em si funciona
+como esperado neste browser. A causa mais provável do "reset" que o
+Paulo vê é **fora do código da app**: ou um link antigo/morto do túnel
+`cloudflared` (cada túnel novo é um domínio novo = armazenamento
+completamente separado, ver "Instalar no telemóvel via tunnel" mais
+acima) em vez do link permanente do GitHub Pages, ou o comportamento
+conhecido do iOS de dar um "storage jar" separado a uma PWA instalada
+("Adicionar ao ecrã principal") vs. ao Safari normal. **Reforcei mesmo
+assim** o que é código-meu-resolvível: `db/init.ts::inicializarDb` agora
+chama `navigator.storage.persist()` ao abrir a app, pedindo ao browser
+para não apagar os dados deste site sob pressão de espaço em disco (uma
+causa real e comum de "PWA perdeu tudo sozinha" em Android/Chrome) --
+testado ao vivo, a chamada corre sem erro (`navigator.storage.persisted()`
+voltou `false` no browser de teste, ou seja o pedido foi recusado dessa
+vez, mas isto é sempre "melhor esforço", nunca garantido, e no Safari/iOS
+a API nem existe). **Pergunta para o Paulo**: sempre abres o mesmo link
+(`https://paulogomesextp.github.io/jardim/`), ou às vezes um link de
+túnel antigo / reinstalas o ícone? Ajuda a confirmar se ainda há alguma
+causa por resolver.
+
+**Nível por tarefa** (`game/nivel.ts`, `Jogador.xp` -- schema v4): antes
+só a venda dava progresso (`totalColhidas`); agora regar/colocar vaso/
+plantar/transplantar/tratar praga/vender dão todos XP (`XP_ACOES`), 25 XP
+por nível. Migração v4 preserva o nível de quem já jogava
+(`xp = totalColhidas * 5`, a mesma equivalência de peso que a venda já
+tinha). `Jogador.acoesFeitas` (novo) regista que tipos de tarefa o
+jogador já fez pelo menos uma vez -- serve de base ao tutorial contextual
+abaixo. Testado ao vivo: regar uma planta nova fez a barra de XP saltar
+de 0% para 4% (1/25) na hora.
+
+**Tutorial** (`game/tutorial.ts`, puro e testado + `OnboardingOverlay.tsx`/
+`TutorialDica.tsx`): um onboarding de 5 cartões (mover, tocar numa planta,
+loja, vaso-depois-semente) mostrado uma única vez a seguir ao primeiro
+login (`Jogador.tutorialVisto`, novo em schema v4) -- "Saltar" fecha logo,
+nunca bloqueia. Depois disso, no máximo 1 dica contextual de cada vez
+(banner pequeno, dispensável) sugere a próxima tarefa que o jogador ainda
+não fez, só quando faz sentido (ex: só sugere "coloca um vaso" se já tens
+sementes no inventário e nenhum vaso vazio à espera) -- nunca repete
+depois de fechada. Quem já jogava antes desta versão (migração v4) fica
+com o onboarding já marcado como visto, para não lhe aparecer o
+"bem-vindo" outra vez só por ter atualizado a app. Testado ao vivo com um
+IndexedDB limpo (jogador novo a sério): onboarding aparece, os 5 passos
+avançam, "Começar a jogar" fecha e marca-se como visto de forma
+persistente (confirmado a reabrir a app sem reaparecer); com o perfil de
+testes já existente (sementes por plantar sem vaso vazio), a dica certa
+apareceu sozinha ("Tens sementes por plantar"), fechou ao clicar e nunca
+mais voltou -- a dica seguinte elegível (praga ativa nalguma das 100+
+plantas de teste) apareceu a seguir, confirmando que passa para a
+próxima em vez de ficar presa ou repetir.
+
 ## Estado atual
 
 Fases 1-3 do motor de jogo continuam concluídas e inalteradas nesta sessão:
@@ -360,3 +424,11 @@ sentido, talvez sem eliminar os vasos, vale a pena reler antes de recomeçar.
    fica visualmente poluído/lento num telemóvel mais fraco -- nenhum dos
    dois foi possível confirmar sem screenshot real (ver "Como foi
    verificado" acima).
+7. **[Sessão 2026-08-19 noite]** A pergunta mais importante em aberto:
+   quando dizes que o jogo "reseta ao entrar", **sempre abres o mesmo
+   link** `https://paulogomesextp.github.io/jardim/`, ou às vezes um link
+   de túnel antigo / reinstalas o ícone do ecrã principal? Não consegui
+   reproduzir perda de dados nesta sessão (ver "Nível por tarefa +
+   tutorial..." acima) -- se o link for sempre o mesmo e continuar a
+   perder progresso depois disto, há mesmo algo por caçar que eu não
+   encontrei só por revisão de código.

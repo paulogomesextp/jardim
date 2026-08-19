@@ -12,6 +12,21 @@ import {
 import { processarAoAbrir } from '../game/growth'
 import { CHANCE_SUCESSO_TRATAMENTO_MANUAL, GRACA_MANUAL_HORAS, GRACA_REMEDIO_HORAS } from '../game/pragas'
 import { precoVaso } from '../game/vasoVisual'
+import { XP_ACOES } from '../game/nivel'
+
+/**
+ * Dá XP por uma tarefa (base do "Nível do Jardim", game/nivel.ts) e marca
+ * essa tarefa como já feita pelo menos uma vez (`acoesFeitas`, usado pelo
+ * tutorial contextual em game/tutorial.ts para só sugerir o que o jogador
+ * ainda não experimentou). Chamado depois de cada ação bem sucedida que
+ * "conta" como progresso -- ver README "Nível por tarefa", 2026-08-19.
+ */
+async function ganharXp(tipo: keyof typeof XP_ACOES) {
+  const jogador = await db.jogador.get(1)
+  if (!jogador) return
+  const acoesFeitas = jogador.acoesFeitas.includes(tipo) ? jogador.acoesFeitas : [...jogador.acoesFeitas, tipo]
+  await db.jogador.update(1, { xp: jogador.xp + XP_ACOES[tipo], acoesFeitas })
+}
 
 const HORA_MS = 3_600_000
 const FASES_DEMO: Exclude<Fase, 'semente'>[] = ['germinacao', 'rebento', 'jovem', 'adulta']
@@ -150,6 +165,7 @@ export async function plantarNoVaso(vasoId: number, speciesId: string): Promise<
   await db.vasos.update(vasoId, { plantaId })
   if (inventario.quantidade <= 1) await db.sementesInventario.delete(inventario.id!)
   else await db.sementesInventario.update(inventario.id!, { quantidade: inventario.quantidade - 1 })
+  await ganharXp('plantar')
 
   return { ok: true }
 }
@@ -169,6 +185,7 @@ export async function colocarVasoNaParcela(
 
   await db.jogador.update(1, { moeda: jogador.moeda - custo })
   await db.vasos.add({ slotIndex, tipo, cor, plantaId: null })
+  await ganharXp('colocarVaso')
   return { ok: true }
 }
 
@@ -202,12 +219,14 @@ export async function tratarPragaManual(id: number): Promise<{ ok: true; sucesso
   const sucesso = Math.random() < CHANCE_SUCESSO_TRATAMENTO_MANUAL
   if (sucesso) {
     await db.plantas.update(id, { pragaAtual: null, pragaImuneAte: Date.now() + GRACA_MANUAL_HORAS * 3_600_000 })
+    await ganharXp('tratarPraga')
   }
   return { ok: true, sucesso }
 }
 
 export async function regarPlanta(id: number) {
   await db.plantas.update(id, { ultimaRega: Date.now() })
+  await ganharXp('regar')
 }
 
 export async function mudarPosicaoSol(id: number, posicao: NivelLuz) {
@@ -268,11 +287,19 @@ export async function transplantarVaso(
       await db.vasos.update(vaso.id!, alteracoes)
     }
   }
+  await ganharXp('transplantar')
   return { ok: true }
 }
 
 export async function obterJogador() {
   return db.jogador.get(1)
+}
+
+/** Marca um passo do tutorial (onboarding ou dica contextual, game/tutorial.ts) como ja visto -- nunca mais volta a aparecer. */
+export async function marcarTutorialVisto(id: string) {
+  const jogador = await db.jogador.get(1)
+  if (!jogador || jogador.tutorialVisto.includes(id)) return
+  await db.jogador.update(1, { tutorialVisto: [...jogador.tutorialVisto, id] })
 }
 
 /** Corre o motor de crescimento sobre todas as plantas vivas e grava o resultado -- chamar sempre que a app abre/volta a primeiro plano. */
@@ -331,6 +358,7 @@ export async function comprarETratarComRemedio(
 
   await db.jogador.update(1, { moeda: jogador.moeda - item.preco })
   await db.plantas.update(plantaId, { pragaAtual: null, pragaImuneAte: Date.now() + GRACA_REMEDIO_HORAS * 3_600_000 })
+  await ganharXp('tratarPraga')
   return { ok: true }
 }
 
@@ -351,10 +379,12 @@ export async function venderPlanta(plantaId: number): Promise<{ ok: true; ganho:
   const ganho = Math.round(especie.valorVendaBase * (planta.saude / 100) * multiplicadorPraga)
 
   const jogador = await db.jogador.get(1)
+  const acoesFeitas = jogador?.acoesFeitas.includes('vender') ? jogador.acoesFeitas : [...(jogador?.acoesFeitas ?? []), 'vender']
   await db.jogador.update(1, {
     moeda: (jogador?.moeda ?? 0) + ganho,
-    // conta para o "Nivel do Jardim" (game/nivel.ts) -- so soma em venda bem sucedida, nunca decresce
-    totalColhidas: (jogador?.totalColhidas ?? 0) + 1,
+    totalColhidas: (jogador?.totalColhidas ?? 0) + 1, // estatistica "colheitas", ja nao e a base do nivel (ver xp)
+    xp: (jogador?.xp ?? 0) + XP_ACOES.vender, // base do "Nivel do Jardim" (game/nivel.ts)
+    acoesFeitas,
   })
   await db.plantas.delete(plantaId)
   // o vaso fica no jardim, vazio -- so a planta desaparece (ver README "Colocacao em fileiras")

@@ -291,6 +291,160 @@ select {
   align-items: center;
 }
 
+/* ---------- tutorial: onboarding inicial (cartoes em sequencia) ---------- */
+
+.tutorial-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(31, 61, 44, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.tutorial-card {
+  width: 100%;
+  max-width: 340px;
+  background: var(--superficie);
+  border: 3px solid var(--madeira-escura);
+  border-radius: 22px;
+  padding: 26px 22px 20px;
+  text-align: center;
+  box-shadow: var(--sombra-hover);
+  animation: subir-sheet 0.22s ease-out;
+}
+
+.tutorial-card__emoji {
+  display: block;
+  font-size: 46px;
+  line-height: 1;
+  margin-bottom: 10px;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
+}
+
+.tutorial-card__titulo {
+  font-family: var(--serif);
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--primaria-escura);
+  margin: 0 0 8px;
+}
+
+.tutorial-card__texto {
+  font-size: 13px;
+  color: var(--texto-suave);
+  line-height: 1.5;
+  margin: 0 0 18px;
+}
+
+.tutorial-card__pontos {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.tutorial-card__ponto {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--cinza-300);
+}
+
+.tutorial-card__ponto--ativo {
+  background: var(--lima);
+  transform: scale(1.3);
+}
+
+.tutorial-card__acoes {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.tutorial-card__saltar {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: var(--texto-suave);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 10px;
+}
+.tutorial-card__saltar:active {
+  transform: none;
+  box-shadow: none;
+}
+
+.tutorial-card__seguinte {
+  flex: 1;
+  background: linear-gradient(180deg, #fff7e6 0%, var(--ouro-suave) 55%, #f0d488 100%);
+  border: 2px solid var(--madeira-escura);
+  box-shadow: 0 4px 0 var(--madeira-escura), var(--sombra);
+  color: #7a3312;
+  padding: 11px 16px;
+}
+
+/* ---------- tutorial: dica contextual (banner dispensavel) ---------- */
+
+.dica-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  max-width: 320px;
+  background: linear-gradient(180deg, #fff 0%, var(--lima-suave) 100%);
+  border: 2px solid var(--lima);
+  border-radius: 16px;
+  padding: 10px 12px;
+  box-shadow: 0 4px 0 #8fbf3a, var(--sombra);
+  animation: subir-sheet 0.2s ease-out;
+}
+
+.dica-toast__emoji {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.dica-toast__corpo {
+  flex: 1;
+  min-width: 0;
+}
+
+.dica-toast__titulo {
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--primaria-escura);
+  margin-bottom: 2px;
+}
+
+.dica-toast__texto {
+  font-size: 11px;
+  color: var(--texto-suave);
+  line-height: 1.4;
+}
+
+.dica-toast__fechar {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--texto-suave);
+  background: rgba(0, 0, 0, 0.06);
+}
+.dica-toast__fechar:active {
+  transform: none;
+  box-shadow: none;
+}
+
 .botao-confirmar {
   align-self: center;
   background: linear-gradient(180deg, #fff7e6 0%, var(--ouro-suave) 55%, #f0d488 100%);

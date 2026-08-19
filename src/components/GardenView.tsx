@@ -10,6 +10,7 @@ import {
   listarLoja,
   listarPlantasComEspecie,
   listarVasos,
+  marcarTutorialVisto,
   mudarPosicaoSol,
   obterJogador,
   plantarNoVaso,
@@ -21,7 +22,8 @@ import {
   type PlantaComEspecie,
 } from '../db/actions'
 import { detetarProblemas } from '../game/notificacoes'
-import { calcularNivel } from '../game/nivel'
+import { calcularNivel, XP_POR_NIVEL } from '../game/nivel'
+import { PASSOS_ONBOARDING, proximaDicaContextual, type EstadoParaDicas } from '../game/tutorial'
 import { GardenScene, type AcoesRapidasPlanta } from '../garden/GardenScene'
 import { VirtualJoystick } from '../garden/VirtualJoystick'
 import { dispararAcaoAvatar } from '../garden/movement'
@@ -29,6 +31,8 @@ import { PlantActionSheet } from './PlantActionSheet'
 import { ShopSheet } from './ShopSheet'
 import { PotPickerSheet } from './PotPickerSheet'
 import { SeedPickerSheet } from './SeedPickerSheet'
+import { OnboardingOverlay } from './OnboardingOverlay'
+import { TutorialDica } from './TutorialDica'
 import { Folha } from './Folha'
 
 const INTERVALO_VERIFICACAO_MS = 5 * 60_000 // verifica problemas a cada 5 min enquanto a app estiver aberta
@@ -164,7 +168,24 @@ export function GardenView() {
 
   const selecionada = plantas.find(({ planta }) => planta.id === selecionadaId)
   const vasoDaSelecionada = vasos.find((v) => v.plantaId === selecionadaId)
-  const infoNivel = calcularNivel(jogador?.totalColhidas ?? 0)
+  const infoNivel = calcularNivel(jogador?.xp ?? 0)
+
+  // tutorial contextual -- so calcula/mostra depois do onboarding inicial estar visto, e so
+  // 1 dica de cada vez (game/tutorial.ts::proximaDicaContextual escolhe qual). temParcelaLivre
+  // e sempre true por construcao (game/layout.ts::gerarSlots mantem sempre fileiras vazias
+  // de folga alem das ja ocupadas), nao precisa de recalcular a grelha aqui so para isto.
+  const onboardingVisto = jogador?.tutorialVisto.includes('onboarding') ?? false
+  const estadoParaDicas: EstadoParaDicas = {
+    acoesFeitas: jogador?.acoesFeitas ?? [],
+    temPlantaComPraga: plantas.some((p) => p.planta.estado === 'praga'),
+    temPlantaAdulta: plantas.some((p) => p.planta.fase === 'adulta' && p.planta.estado !== 'morta'),
+    temVasoVazio: vasos.some((v) => v.plantaId === null),
+    temParcelaLivre: true,
+    temSementeNoInventario: inventario.some((i) => i.quantidade > 0),
+    moeda: jogador?.moeda ?? 0,
+  }
+  const dicaAtual = onboardingVisto ? proximaDicaContextual(estadoParaDicas, jogador?.tutorialVisto ?? []) : null
+  const podeMostrarDica = dicaAtual && !lojaAberta && parcelaEmEscolha === null && vasoEmEscolha === null && !(selecionada && detalhesAbertos)
 
   const acoesRapidas: AcoesRapidasPlanta = {
     onRegar: async (id) => {
@@ -214,10 +235,13 @@ export function GardenView() {
             <Folha tamanho={34} />
             <div className="marca__texto">
               <h1>Between Leaves</h1>
-              <div className="nivel-badge" title={`${infoNivel.progresso}/5 colheitas para o nível ${infoNivel.nivel + 1}`}>
+              <div className="nivel-badge" title={`${infoNivel.progresso}/${XP_POR_NIVEL} XP para o nível ${infoNivel.nivel + 1}`}>
                 <span className="nivel-badge__rotulo">Nível {infoNivel.nivel}</span>
                 <span className="nivel-badge__barra">
-                  <span className="nivel-badge__preenchimento" style={{ width: `${(infoNivel.progresso / 5) * 100}%` }} />
+                  <span
+                    className="nivel-badge__preenchimento"
+                    style={{ width: `${(infoNivel.progresso / XP_POR_NIVEL) * 100}%` }}
+                  />
                 </span>
               </div>
             </div>
@@ -250,6 +274,9 @@ export function GardenView() {
         </div>
 
         {mensagem && <div className="mensagem-toast hud__toast">{mensagem}</div>}
+        {!mensagem && podeMostrarDica && dicaAtual && (
+          <TutorialDica dica={dicaAtual} onFechar={async () => { await marcarTutorialVisto(dicaAtual.id); await recarregar() }} />
+        )}
 
         <div className="hud__toolbar">
           <button className="botao-ferramenta" onClick={() => setLojaAberta(true)}>
@@ -316,6 +343,16 @@ export function GardenView() {
             else avisar(resultado.erro)
             setSelecionadaId(null)
             setDetalhesAbertos(false)
+            await recarregar()
+          }}
+        />
+      )}
+
+      {jogador && !onboardingVisto && (
+        <OnboardingOverlay
+          passos={PASSOS_ONBOARDING}
+          onConcluir={async () => {
+            await marcarTutorialVisto('onboarding')
             await recarregar()
           }}
         />
