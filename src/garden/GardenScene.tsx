@@ -90,7 +90,12 @@ export function GardenScene({ plantas, selecionadaId, onSelecionarPlanta }: Prop
     return () => clearInterval(intervalo)
   }, [localizacoes, onSelecionarPlanta])
 
-  function aoTocarChao(e: React.PointerEvent) {
+  // onClick (nao onPointerDown) de proposito -- tem de ser o mesmo tipo de
+  // evento que o `e.stopPropagation()` do PlantSprite intercepta, senao um
+  // tap num vaso tambem dispararia isto por baixo (pointerdown acontece
+  // antes de click, atravessaria mesmo com o stopPropagation do click).
+  // Bug real apanhado em code review nesta sessao antes do commit.
+  function aoTocarChao(e: React.MouseEvent) {
     const centroX = window.innerWidth / 2
     const centroY = window.innerHeight / 2
     const avatarEcra = mundoParaEcra(avatarPos.x, avatarPos.z)
@@ -113,7 +118,7 @@ export function GardenScene({ plantas, selecionadaId, onSelecionarPlanta }: Prop
   const chaoAltura = Math.max(...cantosChao.map((c) => c.top)) - chaoTop
 
   return (
-    <div ref={shellRef} className="jardim-mundo-camada" onPointerDown={aoTocarChao}>
+    <div ref={shellRef} className="jardim-mundo-camada" onClick={aoTocarChao}>
       <div className="ceu-sol" aria-hidden="true" />
       <div className="ceu-nuvem ceu-nuvem--1" aria-hidden="true" />
       <div className="ceu-nuvem ceu-nuvem--2" aria-hidden="true" />
