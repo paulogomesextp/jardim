@@ -17,8 +17,9 @@ import {
   type PlantaComEspecie,
 } from '../db/actions'
 import { detetarProblemas } from '../game/notificacoes'
-import { Scene } from '../three/Scene'
-import { VirtualJoystick } from '../three/VirtualJoystick'
+import { calcularNivel } from '../game/nivel'
+import { GardenScene } from '../garden/GardenScene'
+import { VirtualJoystick } from '../garden/VirtualJoystick'
 import { PlantActionSheet } from './PlantActionSheet'
 import { ShopSheet } from './ShopSheet'
 import { Folha } from './Folha'
@@ -131,10 +132,11 @@ export function GardenView() {
   }
 
   const selecionada = plantas.find(({ planta }) => planta.id === selecionadaId)
+  const infoNivel = calcularNivel(jogador?.totalColhidas ?? 0)
 
   return (
-    <div className="jardim-3d-shell">
-      <Scene plantas={plantas} onSelecionarPlanta={selecionarPlanta} />
+    <div className="jardim-shell">
+      <GardenScene plantas={plantas} selecionadaId={selecionadaId} onSelecionarPlanta={selecionarPlanta} />
       <VirtualJoystick />
 
       <div className="hud">
@@ -143,29 +145,44 @@ export function GardenView() {
             <Folha tamanho={34} />
             <div className="marca__texto">
               <h1>Between Leaves</h1>
-              <span className="marca__tagline">A little greener, one leaf at a time.</span>
+              <div className="nivel-badge" title={`${infoNivel.progresso}/5 colheitas para o nível ${infoNivel.nivel + 1}`}>
+                <span className="nivel-badge__rotulo">Nível {infoNivel.nivel}</span>
+                <span className="nivel-badge__barra">
+                  <span className="nivel-badge__preenchimento" style={{ width: `${(infoNivel.progresso / 5) * 100}%` }} />
+                </span>
+              </div>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className="hud__acoes-topo">
             {permissaoNotificacoes === 'default' && (
-              <button className="chip" onClick={ativarNotificacoes}>
-                🔔 Ativar avisos
+              <button className="botao-icone" onClick={ativarNotificacoes} aria-label="Ativar avisos" title="Ativar avisos">
+                🔔
               </button>
             )}
             {permissaoNotificacoes === 'denied' && (
-              <span className="badge badge--morta" title="Notificações bloqueadas nas definições do browser">
-                🔕 Avisos bloqueados
+              <span className="botao-icone botao-icone--mudo" title="Notificações bloqueadas nas definições do browser">
+                🔕
               </span>
             )}
-            {permissaoNotificacoes === 'granted' && <span className="badge badge--fase">🔔 Avisos ativos</span>}
-            <button className="chip" onClick={() => setLojaAberta(true)}>
-              🛒 Loja
-            </button>
-            <span className={`coin-pill ${moedaPop ? 'coin-pill--pop' : ''}`}>🪙 {jogador?.moeda ?? 0}</span>
+            {permissaoNotificacoes === 'granted' && (
+              <span className="botao-icone botao-icone--ativo" title="Avisos ativos">
+                🔔
+              </span>
+            )}
+            <span className={`coin-pill ${moedaPop ? 'coin-pill--pop' : ''}`}>
+              <span className="coin-pill__moeda">🪙</span> {jogador?.moeda ?? 0}
+            </span>
           </div>
         </div>
 
         {mensagem && <div className="mensagem-toast hud__toast">{mensagem}</div>}
+
+        <div className="hud__toolbar">
+          <button className="botao-ferramenta" onClick={() => setLojaAberta(true)}>
+            <span className="botao-ferramenta__icone">🛒</span>
+            <span className="botao-ferramenta__rotulo">Loja</span>
+          </button>
+        </div>
       </div>
 
       <ShopSheet

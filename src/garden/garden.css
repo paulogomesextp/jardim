@@ -1,0 +1,499 @@
+/**
+ * Estilos do jardim isométrico 2D -- substitui inteiramente a cena R3F/WebGL
+ * (`three/*.tsx`, removido). Ver README ("Reformulação FarmVille,
+ * 2026-08-19") para a decisão de arquitetura. Importado uma única vez por
+ * `GardenScene.tsx`; `Avatar.tsx` e `PlantSprite.tsx` partilham estas
+ * classes globais.
+ *
+ * Convenção de posicionamento: qualquer elemento do "mundo" (avatar, vaso)
+ * é ancorado ao seu ponto de contacto com o chão via
+ * `transform: translate(Xpx, Ypx) translate(-50%, -100%)`, onde (X,Y) vem
+ * de `iso.ts` (`mundoParaEcra`). Isto significa que o CSS de cada
+ * personagem/vaso pode assumir que o seu próprio "chão" fica no fundo
+ * (bottom:0) da caixa do elemento.
+ */
+
+/* ---------- camada do mundo (céu + chão + avatar + vasos) ---------- */
+
+.jardim-mundo-camada {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  touch-action: none;
+  cursor: pointer;
+  background: linear-gradient(180deg, var(--ceu-topo) 0%, var(--ceu-baixo) 70%, var(--ceu-baixo) 100%);
+}
+
+/* sol + nuvens: fixos no ecrã (fora de `.mundo`, não seguem a câmara) -- ambiente do céu tipo FarmVille */
+
+.ceu-sol {
+  position: absolute;
+  top: 40px;
+  right: 48px;
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 35% 30%, #fff9d8, var(--ouro) 70%);
+  box-shadow: 0 0 32px 10px rgba(217, 148, 0, 0.28);
+  pointer-events: none;
+}
+
+.ceu-nuvem {
+  position: absolute;
+  background: #fff;
+  border-radius: 999px;
+  opacity: 0.85;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.06));
+  pointer-events: none;
+  animation: deriva-nuvem 60s linear infinite;
+}
+
+.ceu-nuvem::before,
+.ceu-nuvem::after {
+  content: '';
+  position: absolute;
+  background: #fff;
+  border-radius: 999px;
+}
+
+.ceu-nuvem--1 {
+  top: 64px;
+  left: -80px;
+  width: 70px;
+  height: 26px;
+  animation-duration: 70s;
+}
+.ceu-nuvem--1::before {
+  width: 40px;
+  height: 34px;
+  left: 10px;
+  top: -16px;
+}
+.ceu-nuvem--1::after {
+  width: 30px;
+  height: 24px;
+  left: 38px;
+  top: -8px;
+}
+
+.ceu-nuvem--2 {
+  top: 120px;
+  left: -140px;
+  width: 54px;
+  height: 20px;
+  animation-duration: 90s;
+  animation-delay: -20s;
+  opacity: 0.7;
+}
+.ceu-nuvem--2::before {
+  width: 30px;
+  height: 24px;
+  left: 8px;
+  top: -12px;
+}
+.ceu-nuvem--2::after {
+  width: 22px;
+  height: 18px;
+  left: 28px;
+  top: -6px;
+}
+
+@keyframes deriva-nuvem {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(140vw);
+  }
+}
+
+/* `.mundo`: origem (0,0) = origem do mundo do jogo; a câmara é simulada
+   transladando este container (feito em JS, GardenScene.tsx), nunca as
+   posições individuais dos filhos, que são fixas em relação a ele. */
+.mundo {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  will-change: transform;
+}
+
+.chao {
+  position: absolute;
+  z-index: -9999;
+  border-radius: 28px;
+  background-color: var(--relva-clara);
+  background-image:
+    repeating-linear-gradient(26.57deg, rgba(255, 255, 255, 0.08) 0 3px, transparent 3px 36px),
+    repeating-linear-gradient(-26.57deg, rgba(0, 0, 0, 0.06) 0 3px, transparent 3px 36px),
+    linear-gradient(135deg, var(--relva-clara), var(--relva-escura));
+  outline: 6px solid var(--madeira-escura);
+  outline-offset: -6px;
+  box-shadow: 0 14px 30px rgba(31, 61, 44, 0.28);
+}
+
+/* ---------- avatar ---------- */
+
+.avatar-raiz {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+}
+
+.avatar {
+  position: relative;
+  width: 40px;
+  height: 64px;
+}
+
+.avatar__sombra {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 32px;
+  height: 10px;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at center, rgba(20, 30, 15, 0.4), transparent 75%);
+  border-radius: 999px;
+}
+
+.avatar__flip {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  width: 40px;
+  height: 56px;
+  transform: translateX(-50%);
+  transition: transform 0.12s ease-out;
+}
+
+.avatar__flip--esquerda {
+  transform: translateX(-50%) scaleX(-1);
+}
+
+.avatar__grupo {
+  position: absolute;
+  inset: 0;
+  animation: avatar-respirar 2.4s ease-in-out infinite;
+}
+
+.avatar--anda .avatar__grupo {
+  animation: avatar-bob 0.32s ease-in-out infinite;
+}
+
+@keyframes avatar-respirar {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-1px); }
+}
+
+@keyframes avatar-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+/* pernas -- calca de ganga, viram/baloucam ao andar */
+.avatar__perna {
+  position: absolute;
+  bottom: 0;
+  width: 10px;
+  height: 18px;
+  border-radius: 4px 4px 2px 2px;
+  background: linear-gradient(180deg, #4c72a0 0%, #375579 100%);
+  transform-origin: top center;
+}
+.avatar__perna--tras {
+  left: 8px;
+}
+.avatar__perna--frente {
+  left: 22px;
+}
+.avatar--anda .avatar__perna--tras {
+  animation: avatar-perna 0.32s ease-in-out infinite;
+}
+.avatar--anda .avatar__perna--frente {
+  animation: avatar-perna 0.32s ease-in-out infinite reverse;
+}
+@keyframes avatar-perna {
+  0%, 100% { transform: rotate(-16deg); }
+  50% { transform: rotate(16deg); }
+}
+
+/* corpo -- peito + bracos, camisa creme sobre a ganga */
+.avatar__corpo {
+  position: absolute;
+  bottom: 15px;
+  left: 4px;
+  width: 32px;
+  height: 24px;
+}
+.avatar__peito {
+  position: absolute;
+  left: 6px;
+  width: 20px;
+  height: 24px;
+  border-radius: 9px 9px 6px 6px;
+  background: linear-gradient(180deg, #fff6e6 0%, #f0e4c8 100%);
+  box-shadow: inset 0 -6px 0 rgba(60, 90, 130, 0.35);
+  border: 2px solid #375579;
+}
+.avatar__braco {
+  position: absolute;
+  top: 2px;
+  width: 8px;
+  height: 15px;
+  border-radius: 4px;
+  background: #f0c49a;
+}
+.avatar__braco--tras {
+  left: -2px;
+}
+.avatar__braco--frente {
+  left: 26px;
+}
+
+/* cabeca + chapeu de palha */
+.avatar__cabeca {
+  position: absolute;
+  bottom: 36px;
+  left: 8px;
+  width: 24px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 32%, #ffd8ab, #f0b47f 78%);
+}
+.avatar__olho {
+  position: absolute;
+  top: 11px;
+  width: 3px;
+  height: 4px;
+  border-radius: 999px;
+  background: #2c2117;
+}
+.avatar__olho--esq {
+  left: 6px;
+}
+.avatar__olho--dir {
+  left: 14px;
+}
+.avatar__chapeu {
+  position: absolute;
+  top: -11px;
+  left: -4px;
+  width: 32px;
+  height: 16px;
+}
+.avatar__chapeu-aba {
+  position: absolute;
+  top: 8px;
+  left: 0;
+  width: 32px;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #e6bd52 0%, #cf9f2e 100%);
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+}
+.avatar__chapeu-copa {
+  position: absolute;
+  top: 0;
+  left: 7px;
+  width: 18px;
+  height: 13px;
+  border-radius: 50% 50% 0 0;
+  background: linear-gradient(180deg, #f3d27a 0%, #d9ab3d 100%);
+  border-bottom: 2px solid #b9861f;
+}
+
+/* ---------- vaso + planta ---------- */
+
+.vaso-raiz {
+  position: absolute;
+  left: 0;
+  top: 0;
+  cursor: pointer;
+}
+
+.vaso {
+  position: relative;
+  width: 44px;
+  height: 0;
+  transition: filter 0.25s;
+}
+
+.vaso--morta {
+  filter: grayscale(0.75) brightness(0.85);
+}
+
+.vaso__sombra {
+  position: absolute;
+  z-index: 0;
+  bottom: -3px;
+  left: 50%;
+  width: 30px;
+  height: 8px;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at center, rgba(20, 30, 15, 0.35), transparent 75%);
+  border-radius: 999px;
+}
+
+.vaso__corpo {
+  position: absolute;
+  z-index: 1;
+  bottom: 0;
+  left: 50%;
+  width: 32px;
+  height: 20px;
+  transform: translateX(-50%);
+  clip-path: polygon(0% 0%, 100% 0%, 82% 100%, 18% 100%);
+  background: linear-gradient(180deg, var(--barro-claro) 0%, var(--barro) 55%, var(--barro-escuro) 100%);
+  box-shadow: inset 0 -4px 6px rgba(0, 0, 0, 0.25), inset 0 2px 0 rgba(255, 255, 255, 0.25);
+}
+
+.vaso__terra {
+  position: absolute;
+  z-index: 2;
+  bottom: 16px;
+  left: 50%;
+  width: 24px;
+  height: 6px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: #4a3623;
+}
+
+.vaso__indicador {
+  position: absolute;
+  z-index: 3;
+  bottom: 1px;
+  right: 3px;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  border: 1.5px solid #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* folhagem: cresce por fase, ver PlantSprite.tsx para que classes aparecem em cada fase */
+
+.vaso__folhagem {
+  position: absolute;
+  z-index: 2;
+  bottom: 18px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  transform: translateX(-50%);
+}
+
+.vaso__semente {
+  position: absolute;
+  bottom: 0;
+  left: -2px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #6b4a2d;
+}
+
+.vaso__folha {
+  position: absolute;
+  bottom: 0;
+  width: 16px;
+  height: 20px;
+  border-radius: 60% 60% 60% 0%;
+  background: linear-gradient(160deg, var(--lima) 0%, var(--verde-500) 100%);
+  border: 1.5px solid var(--verde-700);
+  transform-origin: bottom center;
+}
+.vaso__folha--1 {
+  left: -15px;
+  transform: rotate(-18deg);
+}
+.vaso__folha--2 {
+  left: -6px;
+  height: 26px;
+  transform: rotate(2deg);
+  z-index: 1;
+}
+.vaso__folha--3 {
+  left: 3px;
+  transform: rotate(22deg);
+}
+.vaso__folha--pequena {
+  width: 10px;
+  height: 12px;
+}
+.vaso__folha--pequena.vaso__folha--1 {
+  left: -8px;
+  height: 12px;
+}
+.vaso__folha--pequena.vaso__folha--2 {
+  left: 0px;
+  height: 15px;
+}
+
+.vaso__fruto {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: inset 0 -2px 2px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+.vaso__fruto--1 {
+  left: -10px;
+  bottom: 14px;
+}
+.vaso__fruto--2 {
+  left: 2px;
+  bottom: 22px;
+}
+.vaso__fruto--3 {
+  left: -2px;
+  bottom: 8px;
+}
+
+/* emblema de estado (bolha por cima do vaso) */
+
+.vaso__emblema {
+  position: absolute;
+  z-index: 5;
+  bottom: 46px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 15px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.25));
+  animation: emblema-flutuar 1.6s ease-in-out infinite;
+}
+.vaso__emblema--pronta {
+  animation: emblema-brilhar 1.1s ease-in-out infinite;
+}
+@keyframes emblema-flutuar {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-4px); }
+}
+@keyframes emblema-brilhar {
+  0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.85; }
+  50% { transform: translateX(-50%) scale(1.25); opacity: 1; }
+}
+
+.vaso__nome {
+  position: absolute;
+  z-index: 4;
+  bottom: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 9px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(31, 61, 44, 0.72);
+  padding: 2px 7px;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.vaso-raiz--selecionada .vaso__corpo {
+  box-shadow: 0 0 0 3px var(--lima), inset 0 -4px 6px rgba(0, 0, 0, 0.25), inset 0 2px 0 rgba(255, 255, 255, 0.25);
+}

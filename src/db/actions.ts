@@ -236,7 +236,11 @@ export async function venderPlanta(plantaId: number): Promise<{ ok: true; ganho:
   const ganho = Math.round(especie.valorVendaBase * (planta.saude / 100) * multiplicadorPraga)
 
   const jogador = await db.jogador.get(1)
-  await db.jogador.update(1, { moeda: (jogador?.moeda ?? 0) + ganho })
+  await db.jogador.update(1, {
+    moeda: (jogador?.moeda ?? 0) + ganho,
+    // conta para o "Nivel do Jardim" (game/nivel.ts) -- so soma em venda bem sucedida, nunca decresce
+    totalColhidas: (jogador?.totalColhidas ?? 0) + 1,
+  })
   await db.plantas.delete(plantaId)
   return { ok: true, ganho }
 }

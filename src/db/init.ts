@@ -24,7 +24,7 @@ export async function inicializarDb() {
     // put (nao add) -- em StrictMode o efeito que chama inicializarDb corre 2x em
     // sequencia rapida; get(1) pode ver "nada" nas duas antes de qualquer escrita
     // terminar, e um segundo add() com a mesma chave fixa rebentava com ConstraintError
-    await db.jogador.put({ id: 1, moeda: 50 })
+    await db.jogador.put({ id: 1, moeda: 50, totalColhidas: 0 })
   }
 
   await semearJardimDemo()

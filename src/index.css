@@ -24,6 +24,28 @@
   --ouro: #d99400;
   --ouro-suave: #f5e6bd;
 
+  /* paleta nova da reformulacao FarmVille (2026-08-19): madeira para o
+     "chrome" da UI (paineis/toolbar), ceu+relva para o jardim isometrico
+     2D. Ver README ("Reformulacao FarmVille") para o racional -- o
+     objetivo e o "chunky ledge" que a sessao anterior ja tinha iniciado
+     nos botoes, agora estendido a toda a moldura da UI (paineis com
+     textura de madeira, ceu com gradiente, chao com losangos), em vez de
+     paineis creme lisos sobre uma cena 3D. */
+  --madeira-escura: #6b3f22;
+  --madeira: #8a5530;
+  --madeira-clara: #a86f42;
+  --madeira-veio: #7a4a29;
+
+  --ceu-topo: #6ec6e8;
+  --ceu-baixo: #cdeaf5;
+  --relva-clara: #8fce56;
+  --relva-escura: #7cbb47;
+  --relva-linha: #6aa93c;
+
+  --barro: #c1683f;
+  --barro-claro: #d98858;
+  --barro-escuro: #9c4f2c;
+
   --cinza-700: #6b6152;
   --cinza-500: #8a8071;
   --cinza-300: #ddd2ba;

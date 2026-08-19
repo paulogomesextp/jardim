@@ -49,6 +49,10 @@ export interface PlantaPossuida {
 export interface Jogador {
   id: number // sempre 1, jogo single-player local
   moeda: number
+  // total de plantas vendidas/colhidas ao longo de toda a vida do jogador -- nunca decresce,
+  // base do "Nivel do Jardim" (ver game/nivel.ts), acrescentado na reformulacao FarmVille
+  // (2026-08-19) para dar a sensacao de progressao/XP que o FarmVille original tinha.
+  totalColhidas: number
 }
 
 export interface ItemLoja {
@@ -73,3 +77,22 @@ db.version(1).stores({
   jogador: 'id',
   loja: '++id, tipo, speciesId',
 })
+
+// v2 (reformulacao FarmVille, 2026-08-19): acrescenta `totalColhidas` ao
+// Jogador para o "Nivel do Jardim" -- indices das tabelas nao mudam, so o
+// upgrade preenche o campo novo em quem ja tinha um registo de jogador.
+db.version(2)
+  .stores({
+    especies: 'id, categoria',
+    plantas: '++id, speciesId, fase, estado',
+    jogador: 'id',
+    loja: '++id, tipo, speciesId',
+  })
+  .upgrade(async (tx) => {
+    await tx
+      .table('jogador')
+      .toCollection()
+      .modify((j: Jogador) => {
+        if (j.totalColhidas === undefined) j.totalColhidas = 0
+      })
+  })

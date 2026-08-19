@@ -3,7 +3,8 @@
 Jogo de jardinagem pessoal — cuidar de plantas reais com mecânica de espera
 tipo Travian/Ikariam (semente → germinação → transplantes de vaso em vaso →
 colheita/venda), onde a qualidade dos cuidados (sol, água, tamanho do vaso)
-influencia o resultado. PWA instalável, corre inteiramente no browser.
+influencia o resultado. Visual isométrico ao estilo FarmVille (ver secção
+abaixo). PWA instalável, corre inteiramente no browser.
 
 ## Stack
 
@@ -11,6 +12,8 @@ influencia o resultado. PWA instalável, corre inteiramente no browser.
 - `vite-plugin-pwa` (manifest + service worker)
 - Dexie.js (IndexedDB) como base de dados local — sem servidor/backend
 - Vitest para os testes do motor de jogo
+- Jardim isométrico 100% DOM/CSS (**sem WebGL/Three.js** desde 2026-08-19 --
+  ver "Reformulação FarmVille" abaixo)
 
 ## Comandos
 
@@ -39,116 +42,209 @@ src/
     pragas.ts          -- deteção/tratamento de pragas (ligadas a erro de cuidado)
     temporizadores.ts  -- "quanto falta para X" (rega, próxima fase)
     notificacoes.ts    -- deteta problemas para Notification API
-    layout.ts          -- posições das plantas no jardim 3D
-    imagemPlanta.ts     -- escolhe a foto certa (fase/sede/praga) no cartão 2D
-  three/              -- cena 3D isométrica (React Three Fiber + drei)
-    Scene.tsx          -- luzes, câmara, chão, avatar, plantas
-    IsoCamera.tsx       -- câmara ortográfica fixa que segue o avatar
-    Avatar.tsx, movement.ts, VirtualJoystick.tsx -- avatar + input (teclado/toque)
-    Plant3D.tsx         -- vaso + planta reais (Kenney) + contorno + nome + estado
-    Ground.tsx          -- chão com relva PBR real (ambientCG)
-    potMaterial.ts      -- material de barro partilhado (ambientCG)
-    materialFix.ts      -- corrige metalness dos modelos Kenney (ficavam escuros)
-    ProximityWatcher.tsx -- seleciona a planta mais próxima do avatar
+    layout.ts          -- posições (x,z) das plantas no jardim -- pura, não sabe
+                          nada de 3D nem 2D, só devolve coordenadas de mundo
+    nivel.ts            -- "Nível do Jardim" (XP, ver "Reformulação FarmVille")
+    imagemPlanta.ts     -- escolhe a foto real certa (fase/sede/praga) no
+                          cartão de detalhe (PlantStage) -- só aí, não no jardim
+  garden/             -- jardim isométrico 2D, 100% DOM/CSS (substitui `three/`)
+    iso.ts             -- projeção isométrica pura (mundo x,z <-> pixels de ecrã)
+    movement.ts         -- input (teclado/joystick) partilhado + conversão para
+                          direção de mundo, fora de React (lido em rAF)
+    GardenScene.tsx      -- orquestra chão, avatar, vasos, câmara (segue o
+                          avatar), tap-to-move, deteção de proximidade
+    Avatar.tsx           -- "boneco" DOM/CSS (chapéu de palha, ganga) + loop
+                          de movimento em requestAnimationFrame puro
+    PlantSprite.tsx      -- vaso + planta DOM/CSS, muda por fase de crescimento
+    VirtualJoystick.tsx  -- o controlo tátil que o Paulo pediu para manter
+    estadoVisual.ts, especieVisual.ts -- cor/emblema de estado, acento por categoria
+    garden.css           -- todo o CSS da cena (chão, avatar, vasos, céu)
   components/
-    GardenView.tsx     -- ecrã principal (Canvas 3D + HUD + sheets)
-    PlantActionSheet.tsx / ShopSheet.tsx -- bottom sheets sobre o Canvas
+    GardenView.tsx     -- ecrã principal (GardenScene + HUD + toolbar + sheets)
+    PlantActionSheet.tsx / ShopSheet.tsx -- bottom sheets sobre a cena
     PlantStage.tsx      -- cartão 2D de detalhe/ações da planta selecionada
 ```
 
+## Reformulação FarmVille (2026-08-19, mandato total do Paulo)
+
+> "Quero que mude por completo o jogo e os gráficos, para ser o mais
+> aproximado do FarmVille, pense por si e como ficaria melhor. Pode mudar
+> conceitos e tudo o que achar melhor, assim que como está não está
+> apelativo."
+
+Isto substituiu o mandato anterior ("só polish visual, não mexer na
+essência") por liberdade total de design/conceito, mantendo só uma coisa
+fixa: **o joystick virtual de movimento do avatar**, que o Paulo elogiou
+explicitamente. Ver `.claude/agents/tom.md` para o mandato completo e o
+incidente que motivou a decisão de arquitetura abaixo.
+
+### Decisão de arquitetura: 2D isométrico DOM/CSS em vez de R3F/WebGL
+
+A sessão anterior (madrugada de 19-08) teve um bug real em produção: uma
+alteração à cena 3D (contornos + luz) ficou com ecrã em branco no telemóvel
+do Paulo. Investigação confirmou a causa: o `<canvas>` do React Three Fiber
+ficava preso no tamanho por omissão do HTML (300×150) sempre que a aba não
+tinha foco genuíno, nunca completando um resize+render real -- e pior, essa
+mesma falta de foco genuíno tornou **impossível confirmar de forma autónoma**
+que a cena renderizava bem antes de dar a alteração como concluída (nem o
+browser automatizado desta sessão, nem o Chrome real do Paulo via extensão,
+mantinham foco de forma fiável sem um humano a olhar).
+
+Pesquisei referências reais do FarmVille original antes de decidir (ver
+fontes no fim desta secção) -- achado chave: **o FarmVille nunca foi 3D**.
+Era um jogo 2D isométrico de sprites (Flash), câmara fixa, HUD com moldura
+de madeira, toolbar de ferramentas ao centro-baixo, barra de XP/nível no
+topo. Ou seja, ir para 2D/CSS não é uma cedência técnica -- é **mais fiel**
+ao estilo real que a missão pede para replicar, e resolve o problema de
+verificação pela raiz: um `<div>` posicionado por `transform` tem sempre
+dimensões reais, legíveis de forma síncrona via `getBoundingClientRect()`/
+`getComputedStyle()`, **independentemente de a aba estar em primeiro plano
+genuíno ou de o browser estar a compor frames** -- ao contrário de um
+`<canvas>` WebGL, que só existe visualmente depois de um resize+render que
+pode nunca acontecer sem foco real.
+
+Por isso, `three/*.tsx` (Canvas R3F, câmara ortográfica, modelos `.glb` da
+Kenney, texturas PBR da ambientCG) foi **removido por completo** nesta
+sessão -- não arquivado, removido (fica no histórico do git/GitHub se algum
+dia fizer falta). `three`, `@react-three/fiber` e `@react-three/drei` saíram
+do `package.json`; os assets `.glb`/texturas JPG saíram de `public/`. O novo
+`garden/` (ver "Estrutura") reimplementa exatamente a mesma UX -- avatar
+navegável por teclado/joystick, tap-to-move, câmara que segue o avatar,
+seleção por proximidade -- só que com matemática isométrica pura
+(`iso.ts`: `mundoParaEcra`/`ecraParaMundo`, projeção 2:1 clássica) e
+`requestAnimationFrame` simples em vez de `useFrame`/WebGL. `game/layout.ts`
+(posições x,z das plantas) não mudou nada -- já era puro e nunca soube nada
+de 3D, por isso serviu tal e qual para o novo motor 2D.
+
+**Assets**: sem modelos/texturas 3D para reaproveitar (e sem gerar arte por
+IA, ver restrições em `tom.md`), o avatar e as plantas do jardim passaram a
+ser **desenhados em DOM/CSS puro** (divs com `border-radius`/`clip-path`/
+gradientes -- chapéu de palha e ganga para o avatar, vaso de barro +
+folhagem que muda por fase de crescimento para as plantas), evitando
+qualquer dependência de licença nova. As fotos reais do Wikimedia Commons
+usadas no cartão de detalhe (`PlantStage.tsx`, fora do jardim) não mudaram.
+
+**Fontes da pesquisa FarmVille** (a pesquisa web devolveu pouco detalhe
+visual profundo -- Wikipedia/TV Tropes quase não descrevem estilo; os dados
+mais concretos vieram de duas páginas de gameplay/wiki):
+- gamepressure.com, "FarmVille: Game screen" -- confirma layout: barra de
+  topo com moedas/Farm Cash/nível+XP; grelha isométrica central; toolbar
+  inferior com Multi Tool/Move/Plow/Recycle; painel lateral para
+  mercado/gifts/amigos/notificações.
+- farmville.fandom.com, "FarmVille Gamebar" -- confirma XP/nível e
+  temporizador de colheita como elementos centrais da UI.
+- Conhecimento geral (paleta muito saturada, proporções "chunky", moldura de
+  madeira/couro na UI, ícones glossy com bevel) complementou onde a pesquisa
+  não deu detalhe suficiente -- assumido conscientemente, não inventado às
+  cegas.
+
+### O que mudou visualmente
+
+- **Jardim**: céu com gradiente + sol + nuvens à deriva, chão isométrico em
+  losango com textura de relva (crosshatch CSS no ângulo real 26.57° do
+  tile 2:1) emoldurado a madeira escura, plantas com vaso de barro +
+  folhagem que cresce visivelmente por fase (semente → rebento → jovem →
+  adulta com "fruto"/"flor" na cor de destaque da categoria + emblema ✨ de
+  "pronta"), avatar com chapéu de palha e ganga, bob/perna a "andar" quando
+  em movimento.
+- **HUD**: barra de topo com textura de madeira (era um painel creme liso),
+  pastilha de moeda estilo moeda cravada, **badge de Nível do Jardim novo**
+  (ver abaixo), botões de avisos viraram ícones redondos. Toolbar nova
+  ancorada ao centro-inferior (estilo FarmVille: ferramenta principal
+  sempre visível ali) com o botão da Loja -- antes era um chip pequeno no
+  canto superior direito.
+- **Botões**: sistema "candy button" (gradiente com brilho no topo + rebordo
+  sólido escuro + sombra funda que "afunda" ao tocar), mais chunky que o
+  "ledge" só-sombra da sessão anterior.
+- **Joystick**: mantido pixel a pixel na lógica e no tamanho (base 92px,
+  manípulo 44px) como o Paulo pediu -- só o "skin" mudou para um pad de
+  madeira/couro com manípulo verde-lima, em vez de translúcido cinza-esverdeado.
+
+### Conceito novo: Nível do Jardim (XP)
+
+O FarmVille original girava em torno de XP/nível (barra no topo, sempre
+visível). Em vez de inventar um sistema de pontos à parte, reaproveitei
+`Jogador.moeda` como padrão: `Jogador.totalColhidas` (campo novo, schema
+Dexie `v2` com upgrade automático para quem já tinha jogo instalado) conta
+vendas bem sucedidas ao longo de toda a vida do jogador; `game/nivel.ts`
+(puro, testado) deriva nível = `1 + floor(total/5)`, com uma barra de
+progresso `total%5 / 5` mostrada como XP no badge do topo. Não muda nenhuma
+mecânica existente -- é só leitura de um contador novo, incrementado no
+mesmo sítio que já mexia em `moeda` (`venderPlanta`, `db/actions.ts`).
+
+### Como isto foi verificado (e o limite real dessa verificação)
+
+Confirmado ao vivo, via `resize_window` mobile (375×812) + inspeção de
+`getBoundingClientRect()`/`getComputedStyle()`/`read_page` no browser
+automatizado desta sessão:
+- A árvore DOM renderiza por completo (header, badge de nível, 51 vasos,
+  avatar, joystick, toolbar) com **zero erros de consola**, mesmo com
+  `document.hidden === true` (a aba nunca teve foco genuíno nesta sessão --
+  exatamente a condição que partiu a cena 3D antes). Isto é a prova real de
+  que a decisão de arquitetura resolveu o problema: o DOM não depende de
+  compositing para existir/ter dimensões corretas, ao contrário do canvas R3F.
+- Posições/tamanhos reais conferidos: chão, avatar (40×64px) e vasos têm
+  `transform`/`getBoundingClientRect()` com valores plausíveis e não-nulos;
+  cores resolvidas (`getComputedStyle`) batem com a paleta esperada.
+- Fluxo de interação completo testado via clique/dispatch de eventos reais
+  (não só leitura passiva): selecionar planta → abre o sheet certo com os
+  dados certos → **Vender** → moeda sobe, toast aparece, `totalColhidas`
+  incrementa (schema v2 migrou sem erros).
+- A matemática de projeção (`mundoParaEcra`/`ecraParaMundo`, inversas exatas)
+  e a conversão de input do joystick para direção de mundo
+  (`inputParaMundo`) têm testes Vitest dedicados -- e um desses testes
+  **apanhou um bug real**: a primeira versão de `inputParaMundo` (uma
+  rotação de 45° mal derivada) fazia o avatar andar na diagonal errada.
+  Sem o teste, isto só seria visível vendo a animação mover-se ao vivo --
+  exatamente o tipo de verificação que ficou bloqueada.
+
+**O que não foi possível confirmar ao vivo, e porquê**: com
+`document.hidden === true` durante toda a sessão,
+`requestAnimationFrame` fica **totalmente suspenso** (0 callbacks em 3+
+segundos, confirmado por teste direto) -- ou seja, não vi a câmara a seguir
+o avatar nem a animação de andar a mexer-se de verdade, só posso garantir
+que a lógica/matemática está correta (testada) e que o mecanismo de aplicar
+`style.transform` funciona (confirmado nas posições estáticas). Isto **não
+é o mesmo bug de antes**: aqui a cena já está completa e correta assim que
+a aba ganha foco real (é o comportamento normal/esperado de qualquer rAF
+web -- pausa quando escondido, retoma quando visível), não fica
+permanentemente quebrada como o canvas R3F ficava. Ainda assim, **por
+favor confirma no telemóvel** que o avatar anda na direção certa quando
+empurras o joystick/WASD e que a câmara o segue suavemente -- é o único
+pedaço que só um ecrã real com foco genuíno consegue confirmar de vez.
+
 ## Estado atual
 
-Fases 1-3 concluídas: motor de crescimento testado, catálogo com 10 espécies,
-pragas ligadas a erro de cuidado (tratamento manual grátis 60% ou remédio
-pago garantido), loja de sementes/remédios, notificações do browser, e o
-jardim passou de carrossel 2D a uma **cena 3D isométrica** com avatar
-navegável (React Three Fiber + drei), plantas com modelo `.glb` real por
-espécie (Kenney "Nature Kit", CC0) e vaso com textura PBR real (ambientCG),
-câmara fixa que segue o avatar. `game/*.ts` continua a ser toda a lógica
-pura testada; `three/*.tsx` é só apresentação.
+Fases 1-3 do motor de jogo continuam concluídas e inalteradas nesta sessão:
+crescimento testado, catálogo com 10 espécies, pragas ligadas a erro de
+cuidado, loja de sementes/remédios, notificações do browser. O que mudou foi
+inteiramente a camada de apresentação -- ver "Reformulação FarmVille" acima.
+`game/*.ts` continua a ser toda a lógica pura testada (63 testes Vitest,
+`npm test` verde); `garden/*.tsx` é só apresentação, tal como `three/*.tsx`
+era antes.
 
-Em curso: aproximar o visual do FarmVille (paleta saturada, proporções
-"chunky", contornos, luz plana, UI com ledges 3D, animações bouncy) mantendo
-o conceito de cuidar de plantas reais em vasos intacto -- ver
-`.claude/agents/tom.md` para a missão completa. Sessão 2026-08-19: ledges 3D
-estendidos a toda a UI (não só botões de ação), contornos (`<Outlines>` do
-drei) e luz mais plana na cena 3D, saturação subida nos tons de destaque da
-paleta, e 2 bugs reais de layout corrigidos (elementos dentro dos bottom
-sheets a serem espremidos pelo flexbox em ecrãs pequenos, em vez de o sheet
-fazer scroll como devia).
+### Decisão de uma sessão anterior: WIP de "parcelas"/grelha descartado
 
-### Decisão desta sessão: WIP de "parcelas"/grelha descartado
-
-Ao começar a sessão de 2026-08-19 havia trabalho não commitado (de uma
-sessão anterior) a meio de substituir o mecanismo de vaso por "parcelas" de
-terra numa grelha fixa (`viveiro`/`campo`, `game/grelha.ts`) -- tipo terreno
-de fazenda com fileiras. Foi **descartado** (não apagado -- ver stash), por
-dois motivos:
-
-1. Contradiz o conceito fixo do jogo tal como está escrito no brief do Tom
-   e no próprio código: "vasos com textura PBR real", "transplantada de
-   vaso em vaso" -- e a missão FarmVille é explícita em **não** copiar a
-   mecânica de terreno/colheita em grelha do FarmVille por cima disto.
-2. Estava incompleto e partido: `tsc -b` dava ~20 erros (só `schema.ts`,
-   `seedSpecies.ts`, `care.ts`, `pragas.ts`, `growth.ts` tinham sido
-   tocados; `db/actions.ts`, todos os componentes e a maioria dos testes
-   ainda esperavam vaso), e `npm test` já falhava 1 teste por
-   dessincronização de assinatura (`processarAoAbrir` ganhou um parâmetro
-   `parcela` sem os testes serem atualizados).
-
-O trabalho não foi perdido: `git stash list` tem
-`"WIP grelha/parcela descartado..."` e há uma cópia em patch fora do repo
-(`grelha.ts`/`grelha.test.ts` + diff completo). Se a ideia de dar mais
-espaço/zonas ao jardim voltar a fazer sentido, talvez sem eliminar os
-vasos (ex: zonas do jardim com plantas em vaso à mesma, só organizadas por
-área), vale a pena reler antes de recomeçar do zero.
-
-### Manhã 2026-08-19: revertidos os contornos/luz/tons da cena 3D
-
-O Paulo reportou tela em branco no telemóvel (só o header aparecia, nada
-do jardim/avatar). Investiguei ao vivo (real Chrome ligado via
-claude-in-chrome, não só o browser autónomo) e confirmei, de forma
-repetida, que o `<canvas>` da cena nunca saía do tamanho por omissão do
-HTML (300x150, sem `style` de largura/altura aplicado) -- ou seja, o R3F
-nunca completa um resize+render real, o que bate certo com "ecrã em
-branco" (o canvas fica microscópico/nunca ganha conteúdo visível).
-**Não consegui isolar com 100% de certeza se a causa é o commit "Cena 3D:
-contornos, luz mais plana e cores mais saturadas" (o próprio Tom já tinha
-avisado que não o verificou ao vivo) ou o mesmo problema de ambiente
-"aba sem foco" que já persegue este projeto** -- o sintoma reproduziu-se
-mesmo em testes que deviam estar com foco real, mas o Chrome automatizado
-também nunca ficou de forma fiável em primeiro plano genuíno durante os
-testes, e um pedido de acesso ao ecrã real para confirmar visualmente foi
-negado (não havia ninguém a aprovar o diálogo).
-
-Decisão: **revertido o commit `25ea647`** (`git revert`, commit `8e2df10`),
-já com push e deploy confirmado. Isto devolve a cena 3D à última
-configuração de luz/materiais **já validada ao vivo em sessões
-anteriores** (12-08), removendo a única variável não verificada, sem
-perder nada do resto da sessão de ontem (UI chunky, os 2 fixes de
-flex-shrink, o bounce da loja). Os contornos/luz mais plana/tons mais
-saturados ficam por refazer, desta vez com verificação visual real (no
-telemóvel do Paulo ou com alguém a olhar para o browser automatizado) em
-vez de só revisão de código.
+Havia trabalho não commitado a meio de substituir o vaso por "parcelas" de
+terra numa grelha fixa -- **descartado** (não apagado, ver `git stash list`)
+por contradizer o conceito de vasos e estar incompleto/partido. Continua
+válido: se a ideia de dar mais espaço/zonas ao jardim voltar a fazer
+sentido, talvez sem eliminar os vasos, vale a pena reler antes de recomeçar.
 
 ### Questões em aberto para o Paulo (e a Sara, onde marcado)
 
-1. **[Sara]** Subi ligeiramente a saturação dos tons de destaque da paleta
-   (`--lima`, `--laranja`, `--agua`, `--teal`, `--ouro` em `src/index.css`)
-   como parte da missão FarmVille -- os fundos "-suave" e a base
-   creme/verde ficaram tal e qual. Confirmar se os novos tons ainda batem
-   certo com a arte dela, ou se prefere os originais.
-2. Os ícones da PWA (192/512, `vite.config.ts`) continuam o placeholder do
+1. **Confirma no telemóvel** (ver "Como isto foi verificado" acima): o
+   joystick move o avatar na direção certa e a câmara segue suavemente? É a
+   única coisa desta reformulação que não consegui ver mexer-se ao vivo.
+2. **[Sara]** O avatar, o vaso e a folhagem são desenhados em CSS puro
+   (chapéu de palha, ganga, vaso de barro, folhas/flores por fase) -- sem
+   arte pré-existente para seguir, porque não há sprites 2D dela no
+   repositório ainda. Se tiveres arte/paleta real (mesmo referências soltas
+   do FarmVille que gostes), tem prioridade sobre estas formas geométricas.
+3. Os ícones da PWA (192/512, `vite.config.ts`) continuam o placeholder do
    `vite-plugin-pwa` -- falta exportar PNG a partir do ícone que a Sara
-   mandou por chat (ficou registado no código, já não é novo mas continua
-   por fazer).
-3. Ver acima: a ideia de "parcelas"/grelha foi descartada por contradizer o
-   conceito de vasos -- se a intenção original era outra coisa (ex: só dar
-   mais espaço visual ao jardim, sem tirar os vasos), diz para eu perceber
-   melhor antes de decidir sozinho da próxima vez.
-4. ~~Não consegui verificar visualmente as alterações na cena 3D~~ --
-   confirmado que era um problema real (ecrã em branco no telemóvel do
-   Paulo), commit revertido na manhã de 19-08 (ver secção acima). Por
-   favor confirma que o link ao vivo já mostra o jardim/avatar
-   normalmente outra vez. Contornos/luz plana/tons saturados ficam por
-   refazer com verificação visual real da próxima vez.
+   mandou por chat.
+4. O "Nível do Jardim" (XP a cada 5 colheitas) foi uma decisão minha para
+   aproximar do FarmVille sem inventar um sistema de pontos à parte --
+   confirma se faz sentido como mecânica ou se preferes outra base (ex:
+   nº de espécies diferentes cultivadas, em vez de colheitas totais).

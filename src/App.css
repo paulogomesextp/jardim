@@ -1,34 +1,41 @@
 /* ---------- base de controlos ---------- */
-/* estilo "chunky ledge" (jogo mobile alegre, ref. FarmVille): toda a UI
-   parte da mesma base de botao com rebordo 3D colorido que "afunda" ao
-   tocar -- antes so .acoes-linha button tinha isto, agora e a base de
-   qualquer <button>. select fica de fora (nao ha ledge credivel num
+/* estilo "candy button" (ref. FarmVille: icones/botoes glossy, rebordo
+   grosso escuro + brilho no topo + sombra 3D funda que "afunda" ao tocar)
+   -- reformulacao 2026-08-19, mais chunky que o "ledge" da sessao anterior
+   (borda solida em vez de so a sombra a fazer de rebordo, gradiente com
+   brilho no 1/3 superior). select fica de fora (nao ha bevel credivel num
    controlo nativo do SO), so herda o arredondamento. */
 
 button, select {
   font: inherit;
   font-size: 13px;
-  padding: 9px 15px;
+  font-weight: 700;
+  padding: 10px 16px;
   border-radius: 999px;
-  border: none;
-  background: var(--superficie);
-  color: var(--texto);
   cursor: pointer;
-  box-shadow: 0 3px 0 var(--borda), var(--sombra);
+}
+
+button {
+  border: 2px solid var(--borda);
+  background: linear-gradient(180deg, #fff 0%, var(--superficie) 40%, var(--superficie) 100%);
+  color: var(--texto);
+  box-shadow: 0 4px 0 var(--borda), var(--sombra);
   transition: background 0.15s, transform 0.08s ease, box-shadow 0.08s ease;
 }
 
 select {
   box-shadow: none;
   border: 1px solid var(--borda);
+  background: var(--superficie);
+  color: var(--texto);
 }
 
 button:hover {
-  background: var(--lima-suave);
+  background: linear-gradient(180deg, #fff 0%, var(--lima-suave) 45%, var(--lima-suave) 100%);
 }
 
 button:active {
-  transform: translateY(3px);
+  transform: translateY(4px);
   box-shadow: 0 0 0 var(--borda), var(--sombra);
 }
 
@@ -36,11 +43,11 @@ button:disabled {
   opacity: 0.45;
   cursor: default;
   transform: none;
-  box-shadow: 0 3px 0 var(--borda), var(--sombra);
+  box-shadow: 0 4px 0 var(--borda), var(--sombra);
 }
 
 button:disabled:hover {
-  background: var(--superficie);
+  background: linear-gradient(180deg, #fff 0%, var(--superficie) 40%, var(--superficie) 100%);
 }
 
 select {
@@ -94,18 +101,34 @@ select {
   color: var(--texto-suave);
 }
 
+/* moeda: pastilha dourada com moldura tipo moeda cravada (ref. FarmVille: sempre
+   canto superior, brilho circular + rebordo grosso), mais "objeto" do que uma pill plana */
 .coin-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: var(--ouro-suave);
+  gap: 7px;
+  background: linear-gradient(180deg, #ffe9a8 0%, var(--ouro-suave) 55%, #f0d488 100%);
   color: #7a5309;
-  font-weight: 700;
-  padding: 8px 14px;
-  border-radius: 999px;
+  font-weight: 800;
   font-size: 14px;
+  padding: 7px 16px 7px 8px;
+  border-radius: 999px;
+  border: 2px solid #b97a00;
   white-space: nowrap;
-  box-shadow: inset 0 -2px 0 rgba(201, 138, 19, 0.35), var(--sombra);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 3px 0 #b97a00, var(--sombra);
+}
+
+.coin-pill__moeda {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 35% 30%, #fff4d0, var(--ouro) 70%, #a86a00 100%);
+  border: 1px solid #a86a00;
+  font-size: 11px;
+  box-shadow: inset 0 -2px 2px rgba(122, 83, 9, 0.4);
 }
 
 @keyframes moeda-pop {
@@ -552,25 +575,20 @@ select {
   animation: pulso-saude 0.65s ease-out;
 }
 
-/* ---------- jardim 3D: canvas em ecra inteiro + overlays HTML ---------- */
+/* ---------- jardim: mundo isometrico 2D em ecra inteiro + overlays HTML ---------- */
+/* `jardim-canvas`/R3F removidos na reformulacao FarmVille 2026-08-19 -- o
+   mundo agora vive em garden/garden.css (`.jardim-mundo-camada`/`.mundo`). */
 
-.app-shell-3d {
+.app-shell-jardim {
   height: 100dvh;
   width: 100vw;
   overflow: hidden;
 }
 
-.jardim-3d-shell {
+.jardim-shell {
   position: relative;
   height: 100%;
   width: 100%;
-}
-
-.jardim-canvas {
-  position: absolute;
-  inset: 0;
-  outline: none;
-  touch-action: none;
 }
 
 .hud {
@@ -583,18 +601,148 @@ select {
   pointer-events: none;
 }
 
+/* barra do topo: painel de madeira (ref. FarmVille: toda a "moldura" da UI usa
+   madeira/couro, nao superficies planas creme) -- gradiente + veios via
+   repeating-linear-gradient + rebordo grosso mais escuro em baixo, tipo prancha. */
 .hud__topo {
   pointer-events: auto;
-  background: rgba(251, 246, 234, 0.92);
-  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.05) 0 2px, transparent 2px 26px),
+    linear-gradient(180deg, var(--madeira-clara) 0%, var(--madeira) 55%, var(--madeira-escura) 100%);
+  border: 2px solid var(--madeira-escura);
   border-radius: var(--raio);
   padding: 10px 14px;
-  box-shadow: var(--sombra);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 4px 0 var(--madeira-escura), var(--sombra-hover);
+}
+
+.hud__topo h1,
+.hud__topo .marca__tagline {
+  color: #fff5e2;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.hud__topo .marca__tagline {
+  opacity: 0.85;
+}
+
+.hud__acoes-topo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .hud__toast {
   pointer-events: auto;
   align-self: flex-start;
+}
+
+/* ---------- nivel do jardim (XP, ref. FarmVille) ---------- */
+
+.nivel-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 1px;
+}
+
+.nivel-badge__rotulo {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #fff5e2;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  white-space: nowrap;
+}
+
+.nivel-badge__barra {
+  width: 46px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+.nivel-badge__preenchimento {
+  height: 100%;
+  background: linear-gradient(180deg, var(--lima) 0%, #8fbf3a 100%);
+  transition: width 0.3s ease-out;
+}
+
+/* ---------- botao icone (avisos, no topo) ---------- */
+
+.botao-icone {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  border-radius: 999px;
+  border: 2px solid var(--madeira-escura);
+  background: linear-gradient(180deg, #fff 0%, var(--creme-clara) 55%, var(--creme-clara) 100%);
+  box-shadow: 0 3px 0 var(--madeira-escura), var(--sombra);
+}
+
+.botao-icone--ativo {
+  background: linear-gradient(180deg, #fff 0%, var(--lima-suave) 55%, var(--lima-suave) 100%);
+}
+
+.botao-icone--mudo {
+  opacity: 0.55;
+}
+
+/* ---------- barra de ferramentas inferior (ref. FarmVille: toolbar central em baixo) ---------- */
+
+.hud__toolbar {
+  position: absolute;
+  left: 50%;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  pointer-events: auto;
+  display: flex;
+  gap: 10px;
+}
+
+.botao-ferramenta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 22px 8px;
+  border-radius: 22px;
+  border: 3px solid var(--madeira-escura);
+  background: linear-gradient(180deg, #fff7e6 0%, var(--ouro-suave) 55%, #f0d488 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 5px 0 var(--madeira-escura), var(--sombra-hover);
+}
+
+.botao-ferramenta:hover {
+  background: linear-gradient(180deg, #fff7e6 0%, #ffe9a8 55%, #f0d488 100%);
+}
+
+.botao-ferramenta:active {
+  transform: translateY(5px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 0 0 var(--madeira-escura), var(--sombra);
+}
+
+.botao-ferramenta__icone {
+  font-size: 26px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.2));
+}
+
+.botao-ferramenta__rotulo {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #7a3312;
 }
 
 /* ---------- bottom sheets (acoes da planta / loja) sobre o canvas 3D ---------- */
@@ -660,6 +808,9 @@ select {
 }
 
 /* ---------- joystick virtual (so em ecra tatil) ---------- */
+/* controlo que o Paulo pediu explicitamente para manter -- so o "skin" mudou
+   nesta reformulacao (agora um pad de madeira/couro, ref. FarmVille), o
+   tamanho (92px base / 44px manipulo) e a logica ficam identicos. */
 
 .joystick-base {
   position: absolute;
@@ -668,8 +819,9 @@ select {
   width: 92px;
   height: 92px;
   border-radius: 999px;
-  background: rgba(31, 61, 44, 0.14);
-  border: 1px solid rgba(31, 61, 44, 0.22);
+  background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.12), transparent 60%), var(--madeira-escura);
+  border: 3px solid var(--madeira-escura);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.45), 0 3px 0 rgba(0, 0, 0, 0.25);
   touch-action: none;
   z-index: 3;
 }
@@ -683,6 +835,8 @@ select {
   margin-left: -22px;
   margin-top: -22px;
   border-radius: 999px;
-  background: rgba(31, 61, 44, 0.55);
+  background: radial-gradient(circle at 35% 30%, var(--lima-suave), var(--lima) 65%, #8fbf3a 100%);
+  border: 2px solid #6f9c2c;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
   pointer-events: none;
 }

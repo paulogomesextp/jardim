@@ -5,13 +5,16 @@ const RAIO_BASE = 46 // px
 const RAIO_KNOB = 22 // px
 
 /**
- * Joystick tatil custom (canto inferior esquerdo) -- escreve diretamente em
- * inputVector, mesma convencao do teclado (x/z em [-1,1], rodados pelo yaw
- * fixo da camara dentro de Avatar.tsx). So renderiza em dispositivos de
- * ponteiro grosseiro (touch) -- em desktop fica limpo, so teclado.
- * Confinado a uma zona DOM propria com o seu proprio setPointerCapture,
- * para nunca deixar o drag chegar ao canvas R3F por baixo (evita conflito
- * com o gesto de tap-para-selecionar planta).
+ * Joystick tátil custom (canto inferior esquerdo) -- o elemento que o Paulo
+ * pediu explicitamente para manter na reformulação FarmVille (ver
+ * `.claude/agents/tom.md`). Lógica idêntica à versão 3D anterior
+ * (`three/VirtualJoystick.tsx`), só o caminho de import de `movement`
+ * mudou -- este componente já era DOM/pointer events puro, nunca dependeu
+ * do R3F. Escreve diretamente em `inputVector`, mesma convenção do teclado
+ * (x/z em [-1,1] "de ecrã"). Só renderiza em dispositivos de ponteiro
+ * grosseiro (touch) -- em desktop fica limpo, só teclado. Confinado a uma
+ * zona DOM própria com o seu próprio `setPointerCapture`, para nunca deixar
+ * o drag chegar ao mundo por baixo (evita conflito com o tap-para-selecionar planta).
  */
 export function VirtualJoystick() {
   const [ecraTatil, setEcraTatil] = useState(false)
