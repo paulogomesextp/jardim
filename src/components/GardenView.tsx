@@ -238,6 +238,11 @@ export function GardenView() {
                 🔔
               </span>
             )}
+            {inventario.some((i) => i.quantidade > 0) && (
+              <span className="coin-pill coin-pill--sementes" title="Sementes por plantar -- toca num vaso vazio no jardim">
+                🌱 {inventario.reduce((total, i) => total + i.quantidade, 0)}
+              </span>
+            )}
             <span className={`coin-pill ${moedaPop ? 'coin-pill--pop' : ''}`}>
               <span className="coin-pill__moeda">🪙</span> {jogador?.moeda ?? 0}
             </span>

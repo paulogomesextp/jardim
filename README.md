@@ -42,26 +42,32 @@ src/
     pragas.ts          -- deteção/tratamento de pragas (ligadas a erro de cuidado)
     temporizadores.ts  -- "quanto falta para X" (rega, próxima fase)
     notificacoes.ts    -- deteta problemas para Notification API
-    layout.ts          -- posições (x,z) das plantas no jardim -- pura, não sabe
-                          nada de 3D nem 2D, só devolve coordenadas de mundo
+    layout.ts          -- grelha FIXA de parcelas do jardim (gerarSlots),
+                          pura, sem saber nada de 3D/2D, so devolve slots
     nivel.ts            -- "Nível do Jardim" (XP, ver "Reformulação FarmVille")
     imagemPlanta.ts     -- escolhe a foto real certa (fase/sede/praga) no
                           cartão de detalhe (PlantStage) -- só aí, não no jardim
+    vasoVisual.ts        -- catalogo de tipos/cores de vaso (ver "Colocacao em fileiras")
   garden/             -- jardim isométrico 2D, 100% DOM/CSS (substitui `three/`)
     iso.ts             -- projeção isométrica pura (mundo x,z <-> pixels de ecrã)
     movement.ts         -- input (teclado/joystick) partilhado + conversão para
-                          direção de mundo, fora de React (lido em rAF)
-    GardenScene.tsx      -- orquestra chão, avatar, vasos, câmara (segue o
-                          avatar), tap-to-move, deteção de proximidade
-    Avatar.tsx           -- "boneco" DOM/CSS (chapéu de palha, ganga) + loop
-                          de movimento em requestAnimationFrame puro
-    PlantSprite.tsx      -- vaso + planta DOM/CSS, muda por fase de crescimento
+                          direção de mundo, fora de React (lido em rAF); tambem
+                          o pub/sub de animacao do avatar (dispararAcaoAvatar)
+    GardenScene.tsx      -- orquestra chão, avatar, vasos/parcelas, câmara
+                          (segue o avatar), tap-to-move, anel de proximidade
+                          (so visual, ver "Clicar para abrir")
+    Avatar.tsx           -- "boneco" DOM/CSS (chapéu de palha, ganga, regador/
+                          faiscas/moeda por acao) + loop de movimento em rAF puro
+    PlantSprite.tsx      -- vaso + planta DOM/CSS, muda por fase/especie/tipo/cor
+    EmptySlotSprite.tsx  -- parcela livre sem vaso (so terra, convida a colocar)
+    PlantSpeechMenu.tsx  -- balao de fala com acoes rapidas do vaso selecionado
     VirtualJoystick.tsx  -- o controlo tátil que o Paulo pediu para manter
-    estadoVisual.ts, especieVisual.ts -- cor/emblema de estado, acento por categoria
-    garden.css           -- todo o CSS da cena (chão, avatar, vasos, céu)
+    estadoVisual.ts, especieVisual.ts -- cor/emblema de estado, forma+acento por especie
+    garden.css           -- todo o CSS da cena (chão, avatar, vasos, parcelas, balão, céu)
   components/
     GardenView.tsx     -- ecrã principal (GardenScene + HUD + toolbar + sheets)
     PlantActionSheet.tsx / ShopSheet.tsx -- bottom sheets sobre a cena
+    PotPickerSheet.tsx / SeedPickerSheet.tsx -- colocar vaso / plantar do inventario
     PlantStage.tsx      -- cartão 2D de detalhe/ações da planta selecionada
 ```
 
@@ -213,6 +219,103 @@ favor confirma no telemóvel** que o avatar anda na direção certa quando
 empurras o joystick/WASD e que a câmara o segue suavemente -- é o único
 pedaço que só um ecrã real com foco genuíno consegue confirmar de vez.
 
+## Colocação em fileiras + balão de fala (2026-08-19, sessão Tom à tarde)
+
+Pedido do Paulo, lista com 8 itens: vasos diferentes por planta (tipo/cor,
+maiores/mais pequenos), arte da planta diferenciada por espécie, mapa em
+ecrã inteiro no telemóvel com paredes invisíveis, clicar para abrir em vez
+de auto-abrir por proximidade, balão de fala com ações rápidas em vez do
+painel cheio de ecrã, animação do avatar ao regar (regador a sério), e
+comprar planta nova já não a insere sozinha num sítio aleatório -- tem de
+se colocar o vaso numa parcela livre primeiro.
+
+**Resolve a decisão antiga logo acima** ("WIP de parcelas/grelha
+descartado"): desta vez o pedido é explícito e os vasos **não foram
+eliminados** -- a grelha (`game/layout.ts::gerarSlots`) é só onde os vasos
+*podem* ser colocados, o vaso com a sua textura/cor continua a ser o objeto
+central, exatamente a ressalva "talvez sem eliminar os vasos" que já
+estava anotada ali.
+
+- **Schema v3** (`db/schema.ts`): `VasoPossuido` (vaso físico numa parcela
+  fixa, `plantaId` null = vazio) e `SementeInventario` (sementes
+  compradas/ganhas mas ainda por plantar). Migração automática coloca
+  quem já tinha plantas em vasos de barro/terracota, slots sequenciais --
+  sem perder progresso.
+- **Fluxo novo**: comprar/ganhar semente → entra no inventário (badge 🌱
+  verde no HUD, só aparece se houver algo por plantar) → colocar um vaso
+  numa parcela livre (`PotPickerSheet.tsx`, escolhe tipo + cor, tipo tem
+  custo) → plantar uma semente do inventário nesse vaso vazio
+  (`SeedPickerSheet.tsx`). Vender uma planta liberta o vaso (fica vazio no
+  mesmo sítio, não desaparece do jardim).
+- **`game/layout.ts` reescrito**: `gerarSlots()` é agora uma grelha fixa
+  8 colunas × N linhas (cresce sozinha se já houver mais vasos que a
+  grelha mínima cobre, para uma gravação antiga nunca perder acesso a um
+  vaso), em vez do antigo empacotamento dinâmico por fase de crescimento
+  (`calcularLocalizacoes`, removido). `limitesJardim` deriva sempre desta
+  grelha fixa, nunca da quantidade de plantas possuídas.
+- **Vasos**: 4 tipos com silhuetas CSS diferentes (barro clássico,
+  cerâmica com aba, plástico liso, cesto de vime tecido) × 6 cores
+  (`game/vasoVisual.ts`), aplicada via `--vaso-cor` (custom property,
+  `color-mix()` para luz/sombra do gradiente). Trocar de vaso é uma opção
+  extra no "Transplantar" de sempre (`PlantStage.tsx`) -- decisão consciente
+  de não inventar um mecanismo de "mover planta para outro vaso vazio";
+  o transplante continua a redimensionar/re-estilizar o vaso onde a planta
+  já está.
+  **Assunção a confirmar**: os "vasos mais pequenos" do pedido foram
+  interpretados como "trocar de estilo/tipo" (a troca de tipo/cor não tem
+  restrição de tamanho), não como reduzir literalmente o `tamanhoVasoAtual`
+  em cm -- isso continua só a subir (`INCREMENTOS_VASO_CM`), por realismo
+  (não se encolhe um vaso real) e porque `game/care.ts::taxaVaso` já pune
+  vaso pequeno demais para a fase atual.
+- **Arte por espécie, não só por categoria** (`garden/especieVisual.ts`):
+  4 formas de folhagem (padrão, agulha -- alecrim/alfazema, suculenta --
+  cacto/suculenta, espiga -- girassol) × 5 formas de fruto/flor (baga,
+  flor-estrela, flor-trombeta, flor-grande com 5 pétalas + centro, nenhum),
+  mapeadas por `speciesId` com fallback por categoria para espécies
+  futuras. Continua 100% DOM/CSS, sem asset novo.
+- **Clicar para abrir**: a deteção de proximidade (`GardenScene.tsx`)
+  deixou de chamar `onSelecionarPlanta` sozinha -- só atualiza um estado
+  `pertoIndex` que desenha um anel a pulsar (convite visual), nunca abre
+  nada. Só o clique num vaso/parcela abre algo, de qualquer distância no
+  ecrã (não ficou fisicamente amarrado à proximidade do avatar -- numa UI
+  por toque isso seria mais frustrante do que útil).
+- **Balão de fala** (`garden/PlantSpeechMenu.tsx`): ancorado ao mundo iso
+  (mesma projeção do vaso, acompanha a câmara sem lógica extra), ações
+  rápidas Regar/Sol (cicla os 4 níveis)/Tratar (só com praga)/Vender/
+  Detalhes. "Detalhes" abre o `PlantActionSheet` de sempre para
+  transplante, remédios e temporizadores -- não foi eliminado, só deixou
+  de ser a única forma de interagir.
+- **Animação do avatar** (`garden/movement.ts::dispararAcaoAvatar`,
+  pub/sub simples fora do React): Regar levanta o braço com um regador a
+  pingar 3 gotas; Tratar mostra faíscas ✨ orbitando; Vender/Plantar uma
+  moeda/semente a subir por cima da cabeça. Dura ~900ms, não interrompe o
+  andar. Cada vaso novo também tem um "pop" de entrada (`vaso-colocar-pop`
+  em `garden.css`) ao ser colocado.
+- **Mapa em ecrã inteiro**: `.app-shell-jardim` agora `position:fixed;
+  inset:0` com `100dvh`/`100dvw` (+ fallback `100vh`/`100vw`), `html`/
+  `body`/`#root` a 100% de altura em `index.css` -- antes disto um
+  ancestral sem altura definida podia deixar o mapa cortado no telemóvel.
+  O chão (`.chao`) é sempre dimensionado pela grelha mínima (64+ parcelas),
+  nunca mais um losango pequeno a sobrar céu à volta com poucos vasos
+  colocados. As "paredes invisíveis" já existiam (`Avatar.tsx` já
+  fazia clamp aos `limites`) -- o que faltava era os limites em si serem
+  sempre grandes o suficiente para encher o ecrã.
+
+**Como foi verificado** (sessão sem foco de aba, mesma limitação de sempre
+para 3D/rAF -- aqui não se aplica, é tudo DOM síncrono): `resize_window`
+mobile (375×812) + eventos de clique reais despachados via `javascript_tool`
+(não só leitura passiva) confirmaram, ao vivo: `.jardim-shell` preenche
+exatamente 375×812; balão não aparece sem clicar; fluxo completo parcela
+vazia → escolher tipo/cor → vaso vazio → escolher semente do inventário →
+planta germinando, com o inventário/moeda a descontar certo em cada passo;
+classe `avatar--acao-regar` liga e desliga a tempo (~900ms); as 4 formas de
+folhagem e as 5 de fruto/flor têm todas pelo menos uma planta a usá-las
+entre as 100+ já existentes na gravação de testes. **Não verificado**: o
+visual real (só DOM/computed-style, sem screenshot possível em aba sem
+foco) e a posição exata do balão de fala relativa ao vaso em ecrãs muito
+estreitos -- vale a pena confirmar num telemóvel real que o balão não sai
+cortado nas margens.
+
 ## Estado atual
 
 Fases 1-3 do motor de jogo continuam concluídas e inalteradas nesta sessão:
@@ -248,3 +351,14 @@ sentido, talvez sem eliminar os vasos, vale a pena reler antes de recomeçar.
    aproximar do FarmVille sem inventar um sistema de pontos à parte --
    confirma se faz sentido como mecânica ou se preferes outra base (ex:
    nº de espécies diferentes cultivadas, em vez de colheitas totais).
+5. **[Sessão 2026-08-19 tarde]** Preço dos vasos (10-22🪙, arbitrário,
+   ver `game/vasoVisual.ts`) e se "vaso mais pequeno" devia mesmo poder
+   reduzir `tamanhoVasoAtual` (ver assunção documentada em "Colocação em
+   fileiras" acima) -- por agora só o estilo/cor troca livremente, o
+   tamanho em cm só sobe.
+6. **[Sessão 2026-08-19 tarde]** Confirma no telemóvel real que o balão de
+   fala não fica cortado nas margens do ecrã em vasos perto da borda da
+   grelha, e que o "pop" de entrada dos 100+ vasos ao carregar a app não
+   fica visualmente poluído/lento num telemóvel mais fraco -- nenhum dos
+   dois foi possível confirmar sem screenshot real (ver "Como foi
+   verificado" acima).

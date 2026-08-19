@@ -150,6 +150,15 @@ select {
   animation: moeda-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* pastilha de sementes por plantar (inventario) -- so aparece quando ha algo a espera,
+   lembra o jogador que comprar semente ja nao planta sozinho (ver README "Colocacao em fileiras"). */
+.coin-pill--sementes {
+  background: linear-gradient(180deg, var(--lima) 0 4px, var(--lima-suave) 4px 100%);
+  color: var(--verde-900);
+  border-color: #8fbf3a;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 3px 0 #8fbf3a, var(--sombra);
+}
+
 .mensagem-toast {
   background: var(--laranja-suave);
   border: 1px solid var(--laranja);
