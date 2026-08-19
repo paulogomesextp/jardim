@@ -91,7 +91,7 @@ export function inputParaMundo(ix: number, iz: number): { dx: number; dz: number
  * vez de ler a cada frame -- só o `Avatar.tsx` precisa disto, para mostrar o
  * regador/faíscas/moeda por cima do boneco durante a animação da ação.
  */
-export type AcaoAvatar = 'regar' | 'tratar' | 'vender' | 'plantar' | null
+export type AcaoAvatar = 'regar' | 'tratar' | 'vender' | 'plantar' | 'sol' | null
 let acaoAtual: AcaoAvatar = null
 const ouvintesAcao = new Set<(a: AcaoAvatar) => void>()
 

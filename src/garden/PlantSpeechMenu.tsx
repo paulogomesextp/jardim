@@ -48,7 +48,13 @@ export function PlantSpeechMenu({ x, z, item, onRegar, onCiclarSol, onTratarPrag
               >
                 💧 Regar
               </button>
-              <button className="balao__opcao balao__opcao--sol" onClick={onCiclarSol}>
+              <button
+                className="balao__opcao balao__opcao--sol"
+                onClick={() => {
+                  dispararAcaoAvatar('sol')
+                  onCiclarSol()
+                }}
+              >
                 ☀️ Sol
               </button>
               {item.planta.estado === 'praga' && (

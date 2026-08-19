@@ -164,6 +164,11 @@ export function Avatar({ limites }: Props) {
             🌱
           </span>
         )}
+        {acao === 'sol' && (
+          <span className="avatar__sol-voo" aria-hidden="true">
+            ☀️
+          </span>
+        )}
       </div>
     </div>
   )
