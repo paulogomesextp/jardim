@@ -17,6 +17,15 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      // registo manual em main.tsx (virtual:pwa-register), nao o script
+      // auto-injetado -- precisamos do callback onNeedRefresh para recarregar
+      // a pagina sozinha quando ha versao nova (ver "Deploy sempre atualizado"
+      // no README): sem isto, skipWaiting+clientsClaim fazem o novo service
+      // worker assumir controlo em segundo plano, mas a aba que ja estava
+      // aberta continua a correr o JS antigo ate seres TU a recarregar --
+      // e exatamente o sintoma "aparece a versao antiga mesmo com refresh"
+      // que o Paulo reportou.
+      injectRegister: false,
       // icones 192/512 ainda sao o placeholder do vite-plugin-pwa -- faltam
       // ficheiros PNG exportados a partir da arte da namorada do Paulo (ela
       // mandou o icone por chat, nao um ficheiro fonte editavel)
